@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "parser_version": "kap-exact-table-v1.0",
+  "generated_at": "",
+  "tefas_kind": "YAT",
+  "fund_count": 0,
+  "transaction_status_counts": {
+    "AÇIK": 0,
+    "KAPALI": 0,
+    "KONTROL": 0
+  },
+  "funds": {}
+}
