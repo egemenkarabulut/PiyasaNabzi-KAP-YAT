@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0",
+  "publisher_version": "1.0.0",
+  "generated_at": null,
+  "status": "NOT_INITIALIZED",
+  "data_file": "data/yat_kap_current.json",
+  "data_sha256": null,
+  "metrics": {},
+  "sources": {
+    "start_year": "KAP",
+    "risk_level": "KAP",
+    "transaction_status": "KAP; yalnız çıplak TEFAS ifadesinde TEFAS liste doğrulaması"
+  }
+}
