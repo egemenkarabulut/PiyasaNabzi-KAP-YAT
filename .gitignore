@@ -1,0 +1,6 @@
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.run_output/
+KAP_YAT_DETAY_TEST_CIKTILARI/
