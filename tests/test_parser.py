@@ -52,7 +52,7 @@ def make_result(**overrides):
 
 def test_v91_internal_rules_are_preserved():
     passed, total = source.run_internal_rule_self_test()
-    assert passed == total == 6
+    assert passed == total == 9
 
 
 def test_empty_trade_place_is_closed_under_v91_rules():
@@ -132,3 +132,113 @@ def test_official_publish_is_blocked_while_queue_has_pending_records(tmp_path, m
     assert published is False
     assert metrics["pending_total"] == 1
     assert not publisher.OFFICIAL_PATH.exists()
+
+
+def test_bpz_risk_is_read_from_matching_table_column():
+    html = """
+    <html><body>
+      <h2>Fonun Yatırım Stratejisi ve Risk Değeri</h2>
+      <table>
+        <tr><th>Yatırım Stratejisi</th><th>Risk Değeri</th></tr>
+        <tr>
+          <td>Fon portföyünün tamamı devamlı olarak uzun bir strateji metninden oluşur.</td>
+          <td>2</td>
+        </tr>
+      </table>
+      <h2>Fon Karşılaştırma Ölçütü</h2>
+    </body></html>
+    """
+    soup = source.clean_soup(html)
+    result = source.extract_risk(soup, source.visible_lines(soup))
+    assert result.value == "2"
+    assert "TABLO/KOLON" in result.source_label
+
+
+def test_bpz_flattened_segment_fallback_reads_trailing_risk():
+    html = """
+    <html><body>
+      <div>Fonun Yatırım Stratejisi ve Risk Değeri</div>
+      <div>Yatırım Stratejisi Risk Değeri</div>
+      <div>Fon portföyü uzun bir strateji metninden oluşacaktır.</div>
+      <div>Yabancı para birimi cinsinden varlık dahil edilmeyecektir.2</div>
+      <div>Fon Karşılaştırma Ölçütü</div>
+    </body></html>
+    """
+    soup = source.clean_soup(html)
+    result = source.extract_risk(soup, source.visible_lines(soup))
+    assert result.value == "2"
+    assert "BÖLÜM SEGMENTİ" in result.source_label
+
+
+def test_segment_fallback_does_not_mistake_t_plus_two_for_risk():
+    html = """
+    <html><body>
+      <div>Fonun Yatırım Stratejisi ve Risk Değeri</div>
+      <div>Yatırım Stratejisi Risk Değeri</div>
+      <div>İşlemler T+2 valörlüdür</div>
+      <div>Fon Karşılaştırma Ölçütü</div>
+    </body></html>
+    """
+    soup = source.clean_soup(html)
+    result = source.extract_risk(soup, source.visible_lines(soup))
+    assert result.value == "—"
+
+
+def test_missing_risk_remains_dash_when_all_methods_fail():
+    html = """
+    <html><body>
+      <div>Fonun Yatırım Stratejisi ve Risk Değeri</div>
+      <div>Yatırım Stratejisi Risk Değeri</div>
+      <div>Risk değeri henüz açıklanmamıştır.</div>
+      <div>Fon Karşılaştırma Ölçütü</div>
+    </body></html>
+    """
+    soup = source.clean_soup(html)
+    result = source.extract_risk(soup, source.visible_lines(soup))
+    assert result.value == "—"
+
+
+
+def test_alc_visual_column_with_colspan_is_read_vertically():
+    html = """
+    <html><body><table>
+      <tr><th colspan="5">Fonun Yatırım Stratejisi ve Risk Değeri</th></tr>
+      <tr><th colspan="4">Yatırım Stratejisi</th><th>Risk Değeri</th></tr>
+      <tr>
+        <td colspan="4">Uzun strateji metni; %80, 2.4 ve başka rakamlar içerir.</td>
+        <td><span>6</span></td>
+      </tr>
+    </table><h2>Fon Karşılaştırma Ölçütü</h2></body></html>
+    """
+    soup = source.clean_soup(html)
+    result = source.extract_risk(soup, source.visible_lines(soup))
+    assert result.value == "6"
+    assert result.matched_scope == "TABLO_KOLON"
+    assert "GÖRSEL SÜTUN" in result.evidence
+
+
+def test_anl_visual_column_with_rowspan_is_read_vertically():
+    html = """
+    <html><body><table>
+      <tr><th>Yatırım Stratejisi</th><th rowspan="1">Risk Değeri</th></tr>
+      <tr><td>Yatırım stratejisi metni soldadır.</td><td>1</td></tr>
+    </table><h2>Fon Karşılaştırma Ölçütü</h2></body></html>
+    """
+    soup = source.clean_soup(html)
+    result = source.extract_risk(soup, source.visible_lines(soup))
+    assert result.value == "1"
+    assert result.matched_scope == "TABLO_KOLON"
+
+
+def test_vertical_column_accepts_only_a_single_digit_1_to_7():
+    invalid_values = ["Risk 5", "%2", "T+2", "2.4", "8", "12", ""]
+    for invalid in invalid_values:
+        html = f"""
+        <html><body><table>
+          <tr><th>Yatırım Stratejisi</th><th>Risk Değeri</th></tr>
+          <tr><td>Strateji metni</td><td>{invalid}</td></tr>
+        </table><h2>Fon Karşılaştırma Ölçütü</h2></body></html>
+        """
+        soup = source.clean_soup(html)
+        result = source.extract_risk(soup, source.visible_lines(soup))
+        assert result.value == "—", (invalid, result.value, result.evidence)
