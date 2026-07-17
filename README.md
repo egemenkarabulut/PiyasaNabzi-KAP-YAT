@@ -1,6 +1,6 @@
 # Piyasa Nabzı Türkiye — YAT/KAP Merkezi
 
-Bu repository, **KAP aktif YF/Y yatırım fonu evrenini** v9.1 kurallarıyla tarar ve public JSON veri beslemesi üretir.
+Bu repository, **KAP aktif YF/Y yatırım fonu evrenini** v9.3 kurallarıyla tarar ve public JSON veri beslemesi üretir.
 
 ## Yayınlanan ana alanlar
 
@@ -13,7 +13,7 @@ Her fon için:
 
 Geriye dönük uyumluluk için `transaction_status`, `trade_status` ile aynı değeri taşır.
 
-## v9.1 kaynak kuralları
+## v9.3 kaynak kuralları
 
 - Ana evren: KAP `YF/Y` aktif yatırım fonları.
 - Fon adı: KAP ana listesindeki resmî ad.
@@ -24,6 +24,14 @@ Geriye dönük uyumluluk için `transaction_status`, `trade_status` ile aynı de
 - Platformun tam adı/TEFDP ya da doğrulanmış TEFAS erişimi: `AÇIK`.
 - Teknik erişim veya gerçek DOM ayrıştırma problemi: `KONTROL`/teşhis kuyruğu.
 
+
+### v9.3 risk ayrıştırma sırası
+
+1. `Yatırım Stratejisi` sütununun sağındaki `Risk Değeri` başlığı bulunur.
+2. `rowspan`/`colspan` hesaba katılarak aynı sütunun alt satırındaki yalnız `1–7` değeri okunur.
+3. Mevcut metin ve segment kuralları çapraz kontrol olarak uygulanır.
+4. Güvenilir sonuç yoksa alan boş (`—`) bırakılır; tahmin yapılmaz.
+
 ## Hız ve kilitlenme koruması
 
 - Varsayılan 1 işçi mantığı.
@@ -31,7 +39,7 @@ Geriye dönük uyumluluk için `transaction_status`, `trade_status` ile aynı de
 - Workflow 60 fonluk kalıcı batch'ler halinde çalışır.
 - Her batch sonrasında staging ve diagnostics dosyaları GitHub'a commit edilir.
 - Batch'ler arasında varsayılan 180 saniye soğuma vardır.
-- HTTP 429 oluşursa v9.1 motoru 3 → 10 → 20 dakika kademeli bekler ve aynı noktadan devam eder.
+- HTTP 429 oluşursa v9.3 motoru 3 → 10 → 20 dakika kademeli bekler ve aynı noktadan devam eder.
 - Geçici HTTP hatası daha önce doğrulanmış doğru alanların üzerine yazılmaz.
 
 ## Kalıcı dosyalar
@@ -70,3 +78,8 @@ data/diagnostics/attempt_events.jsonl     # Deneme geçmişi
 ```text
 https://raw.githubusercontent.com/GITHUB_KULLANICI_ADI/REPO_ADI/main/data/yat_fund_enrichment.json
 ```
+
+
+## Windows yerel tam tarama
+
+`YEREL_TAM_TEST_BASLAT.bat` dosyasına çift tıklayın. Bu başlatıcı GitHub ile aynı `scripts/update_yat_kap_data.py` motorunu kullanır, 60 fonluk batch’lerle ilerler, her fondan sonra checkpoint kaydeder ve `PUBLISHED` durumunda otomatik durur. Eski bağımsız test `.bat` dosyasını bu repoya eklemeyin.
