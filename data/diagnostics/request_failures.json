@@ -1,12 +1,12 @@
 {
   "schema_version": 2,
-  "updated_at": "2026-07-17T08:44:43+00:00",
-  "count": 1927,
+  "updated_at": "2026-07-17T08:52:25+00:00",
+  "count": 1875,
   "category_counts": {
-    "MISSING_RISK": 13,
-    "MISSING_START": 11,
-    "MISSING_START_AND_RISK": 7,
-    "NOT_ATTEMPTED": 1896
+    "MISSING_RISK": 18,
+    "MISSING_START": 13,
+    "MISSING_START_AND_RISK": 8,
+    "NOT_ATTEMPTED": 1836
   },
   "failures": [
     {
@@ -444,484 +444,116 @@
       "error": ""
     },
     {
-      "fund_code": "CVD",
-      "fund_name": "AK PORTFÖY GİFON SERBEST (DÖVİZ) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "CVE",
-      "fund_name": "AK PORTFÖY BİRİNCİ KAMU BORÇLANMA ARAÇLARI (TL) ÖZEL FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "CVF",
-      "fund_name": "AK PORTFÖY SÜRDÜRÜLEBİLİRLİK SERBEST (TL) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
       "fund_code": "CVK",
       "fund_name": "INVEO PORTFÖY ÇOKLU VARLIK KATILIM FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_START",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "CVL",
-      "fund_name": "A1 CAPİTAL PORTFÖY ÇOKLU VARLIK KATILIM FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "CYD",
-      "fund_name": "AK PORTFÖY 2027 SERBEST (DÖVİZ-AVRO) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "—",
+      "risk_level": "2",
+      "trade_status": "AÇIK",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/cvk-inveo-portfoy-coklu-varlik-katilim-fonu",
+      "error": ""
     },
     {
       "fund_code": "DA1",
       "fund_name": "A1 CAPİTAL PORTFÖY SERBEST (DÖVİZ) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_START",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "—",
+      "risk_level": "5",
+      "trade_status": "KAPALI",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/da1-a1-capital-portfoy-serbest-doviz-fon",
+      "error": ""
     },
     {
       "fund_code": "DAC",
       "fund_name": "DENİZ PORTFÖY BORİS SERBEST (DÖVİZ) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_RISK",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DAE",
-      "fund_name": "DENİZ PORTFÖY ARBAU HİSSE SENEDİ SERBEST ÖZEL FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DAH",
-      "fund_name": "DENİZ PORTFÖY HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DAI",
-      "fund_name": "DENİZ PORTFÖY ARTI SERBEST (DÖVİZ) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DAL",
-      "fund_name": "DENİZ PORTFÖY SU SERBEST (DÖVİZ) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DAS",
-      "fund_name": "DENİZ PORTFÖY ONİKİNCİ SERBEST (DÖVİZ) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DAT",
-      "fund_name": "DENİZ PORTFÖY ARMUT SERBEST (DÖVİZ) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DAV",
-      "fund_name": "DENİZ PORTFÖY 2026 SERBEST (DÖVİZ-AVRO) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DAZ",
-      "fund_name": "DENİZ PORTFÖY TÜRKİZ SERBEST (DÖVİZ) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DB2",
-      "fund_name": "AKTİF PORTFÖY İKİNCİ KISA VADELİ SERBEST (TL) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DBA",
-      "fund_name": "DENİZ PORTFÖY ALTIN FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DBB",
-      "fund_name": "DENİZ PORTFÖY BORÇLANMA ARAÇLARI FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "2022",
+      "risk_level": "—",
+      "trade_status": "KAPALI",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/dac-deniz-portfoy-boris-serbest-doviz-ozel-fon",
+      "error": ""
     },
     {
       "fund_code": "DBG",
       "fund_name": "DENİZ PORTFÖY BEYAZ SERBEST ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_RISK",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DBH",
-      "fund_name": "DENİZ PORTFÖY EUROBOND (DÖVİZ) BORÇLANMA ARAÇLARI FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DBK",
-      "fund_name": "DENİZ PORTFÖY KISA VADELİ BORÇLANMA ARAÇLARI (TL) FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DBP",
-      "fund_name": "DENİZ PORTFÖY BİRİNCİ DEĞİŞKEN FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DBZ",
-      "fund_name": "DENİZ PORTFÖY ÖZEL SEKTÖR BORÇLANMA ARAÇLARI FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DCB",
-      "fund_name": "DENİZ PORTFÖY PARA PİYASASI SERBEST (TL) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DCD",
-      "fund_name": "DENİZ PORTFÖY SKA SERBEST (DÖVİZ) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DCE",
-      "fund_name": "DENİZ PORTFÖY BAKHAM SERBEST (DÖVİZ) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "2014",
+      "risk_level": "—",
+      "trade_status": "KAPALI",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/dbg-deniz-portfoy-beyaz-serbest-ozel-fon",
+      "error": ""
     },
     {
       "fund_code": "DCN",
       "fund_name": "DENİZ PORTFÖY ÜÇÜNCÜ PARA PİYASASI (TL) FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_RISK",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DCP",
-      "fund_name": "YAPI KREDİ PORTFÖY CÖMERT SERBEST (DÖVİZ) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DCV",
-      "fund_name": "DENİZ PORTFÖY KAR PAYI ÖDEYEN SERBEST (DÖVİZ) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DDA",
-      "fund_name": "DENİZ PORTFÖY BANKACILIK SEKTÖRÜ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DDC",
-      "fund_name": "DENİZ PORTFÖY GÜN DOĞUSU HİSSE SENEDİ SERBEST (TL) FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DDE",
-      "fund_name": "DENİZ PORTFÖY BADE SERBEST (DÖVİZ) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DDF",
-      "fund_name": "DENİZ PORTFÖY DİNAMO HİSSE SENEDİ SERBEST (TL) FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DDP",
-      "fund_name": "DENİZ PORTFÖY SK SERBEST (DÖVİZ) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DDS",
-      "fund_name": "DENİZ PORTFÖY DAMLA SERBEST ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DEF",
-      "fund_name": "ALLBATROSS PORTFÖY DEFNE SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DEI",
-      "fund_name": "ALLBATROSS PORTFÖY DEMİR KISA VADELİ KATILIM SERBEST (TL) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DFC",
-      "fund_name": "DENİZ PORTFÖY TARIM VE GIDA DEĞİŞKEN FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DFD",
-      "fund_name": "DENİZ PORTFÖY EMTİA SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DFI",
-      "fund_name": "ATLAS PORTFÖY SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DFO",
-      "fund_name": "AZİMUT PORTFÖY DLS SERBEST ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DGF",
-      "fund_name": "A1 CAPİTAL PORTFÖY DEĞİŞKEN FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DGH",
-      "fund_name": "ATA PORTFÖY PARA PİYASASI SERBEST (TL) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DHI",
-      "fund_name": "PARDUS PORTFÖY DOKUZUNCU HİSSE SENEDİ SERBEST (TL) FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DHJ",
-      "fund_name": "DENİZ PORTFÖY TEKNOLOJİ ŞİRKETLERİ HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DHM",
-      "fund_name": "DENİZ PORTFÖY ESG SÜRDÜRÜLEBİLİRLİK FON SEPETİ FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DHP",
-      "fund_name": "DENİZ PORTFÖY PERİFER HİSSE SENEDİ SERBEST ÖZEL FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DHS",
-      "fund_name": "DENİZ PORTFÖY CC HİSSE SENEDİ SERBEST ÖZEL FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "2025",
+      "risk_level": "—",
+      "trade_status": "KAPALI",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/dcn-deniz-portfoy-ucuncu-para-piyasasi-tl-fonu",
+      "error": ""
     },
     {
       "fund_code": "DHT",
       "fund_name": "DENİZ PORTFÖY HAVACILIK VE SAVUNMA TEKNOLOJİLERİ DEĞİŞKEN FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_RISK",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DHV",
-      "fund_name": "DENİZ PORTFÖY BİRİNCİ HİSSE SENEDİ SERBEST (TL) FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DID",
-      "fund_name": "DENİZ PORTFÖY İKİNCİ DEĞİŞKEN FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DIH",
-      "fund_name": "DENİZ PORTFÖY İKİNCİ HİSSE SENEDİ SERBEST (TL) FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "2025",
+      "risk_level": "—",
+      "trade_status": "AÇIK",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/dht-deniz-portfoy-havacilik-ve-savunma-teknolojileri-degisken-fon",
+      "error": ""
     },
     {
       "fund_code": "DII",
       "fund_name": "DENİZ PORTFÖY İKİNCİ İSTATİSTİKSEL ARBİTRAJ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_START_AND_RISK",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DIM",
-      "fund_name": "DENİZ PORTFÖY İMRAL SERBEST (DÖVİZ) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DIP",
-      "fund_name": "DENİZ PORTFÖY İKİNCİ PARA PİYASASI SERBEST (TL) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DK1",
-      "fund_name": "KUVEYT TÜRK PORTFÖY DÜNYA KATILIM BANKASI KISA VADELİ KATILIM SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DK8",
-      "fund_name": "DENİZ PORTFÖY KAR PAYI ÖDEYEN SEKİZİNCİ SERBEST (DÖVİZ) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "DKA",
-      "fund_name": "DENİZ PORTFÖY KAR PAYI ÖDEYEN DOKUZUNCU SERBEST (DÖVİZ) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "—",
+      "risk_level": "—",
+      "trade_status": "KAPALI",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/dii-deniz-portfoy-ikinci-istatistiksel-arbitraj-hisse-senedi-serbest-fon-hisse-senedi-yogun-fon",
+      "error": ""
     },
     {
       "fund_code": "DKC",
       "fund_name": "DENİZ PORTFÖY İKİNCİ SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_RISK",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "2025",
+      "risk_level": "—",
+      "trade_status": "KAPALI",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/dkc-deniz-portfoy-ikinci-serbest-fon",
+      "error": ""
     },
     {
       "fund_code": "DKH",
