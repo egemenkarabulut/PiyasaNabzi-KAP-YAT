@@ -1,0 +1,36 @@
+PIYASA NABZI YAT/KAP — YÜKLEME VE İLK ÇALIŞTIRMA
+==================================================
+
+1. ZIP içindeki repository klasörünün TÜM içeriğini mevcut GitHub repository'nizin
+   kök dizinine yükleyin ve aynı isimli dosyaları değiştirin.
+
+2. Özellikle şu yeni/yenilenen dosyaların yüklendiğini kontrol edin:
+   - scripts/kap_yat_source.py
+   - scripts/update_yat_kap_data.py
+   - .github/workflows/update-yat-kap-data.yml
+   - data/staging/yat_kap_progress.json
+   - data/diagnostics/request_failures.json
+   - data/run_state.json
+
+3. GitHub > Settings > Actions > General > Workflow permissions bölümünde
+   "Read and write permissions" açık olmalıdır.
+
+4. Actions > YAT KAP Merkezi Veri Güncelleme > Run workflow.
+
+5. İlk gece testi için varsayılanları değiştirmeyin:
+   batch_size = 60
+   max_batches = 40
+   cooldown_seconds = 180
+   delay_seconds = 1.35
+
+6. Workflow her batch sonunda veriyi GitHub'a commit eder. Tarama yarıda kesilse bile
+   data/staging/yat_kap_progress.json içindeki kayıtlar kaybolmaz.
+
+7. Sabah kontrol edilecek dosyalar:
+   - data/run_state.json
+   - data/staging/yat_kap_progress.json
+   - data/staging/failed_codes.json
+   - data/diagnostics/request_failures.json
+   - data/yat_fund_enrichment.json
+
+Run state PUBLISHED ise resmî JSON başarıyla oluşturulmuştur.
