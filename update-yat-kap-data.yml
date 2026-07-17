@@ -1,0 +1,133 @@
+name: YAT KAP Merkezi Veri Güncelleme
+
+on:
+  workflow_dispatch:
+    inputs:
+      batch_size:
+        description: "Her kalıcı checkpoint öncesi işlenecek fon sayısı"
+        required: false
+        default: "60"
+      max_batches:
+        description: "Bu çalışmada en fazla kaç batch işlenecek"
+        required: false
+        default: "40"
+      cooldown_seconds:
+        description: "Batch'ler arası güvenli bekleme süresi"
+        required: false
+        default: "180"
+      delay_seconds:
+        description: "KAP istekleri arasındaki minimum süre"
+        required: false
+        default: "1.35"
+  schedule:
+    # Türkiye saatiyle her pazar 04:17 (Türkiye UTC+3)
+    - cron: "17 1 * * 0"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: yat-kap-data-update
+  cancel-in-progress: false
+
+jobs:
+  update-data:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+
+    steps:
+      - name: Depoyu al
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Python kur
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: "pip"
+
+      - name: Paketleri kur
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: v9.1 kural ve publisher testleri
+        run: pytest -q
+
+      - name: Resumable batch taramasını çalıştır
+        env:
+          BATCH_SIZE: ${{ github.event.inputs.batch_size || '60' }}
+          MAX_BATCHES: ${{ github.event.inputs.max_batches || '40' }}
+          COOLDOWN_SECONDS: ${{ github.event.inputs.cooldown_seconds || '180' }}
+          DELAY_SECONDS: ${{ github.event.inputs.delay_seconds || '1.35' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          for batch_no in $(seq 1 "$MAX_BATCHES"); do
+            echo "============================================================"
+            echo "BATCH ${batch_no}/${MAX_BATCHES}"
+            echo "============================================================"
+
+            python scripts/update_yat_kap_data.py \
+              --batch-size "$BATCH_SIZE" \
+              --delay "$DELAY_SECONDS" \
+              --refresh-days 6 \
+              --routine-request-limit 65 \
+              --routine-cooldown-seconds 180
+
+            git add data/
+            if git diff --cached --quiet; then
+              echo "Bu batch'te commit edilecek veri değişikliği yok."
+            else
+              git commit -m "data: YAT KAP checkpoint batch ${batch_no} [skip ci]"
+              git pull --rebase origin main
+              git push origin HEAD:main
+            fi
+
+            STATUS=$(python - <<'PY'
+          import json
+          from pathlib import Path
+          path = Path("data/run_state.json")
+          if not path.exists():
+              print("UNKNOWN")
+          else:
+              print(json.loads(path.read_text(encoding="utf-8")).get("status", "UNKNOWN"))
+          PY
+            )
+
+            echo "Run state: $STATUS"
+            if [[ "$STATUS" == "PUBLISHED" || "$STATUS" == "COMPLETE_WITH_UNRESOLVED" ]]; then
+              echo "Tarama döngüsü tamamlandı."
+              break
+            fi
+
+            if [[ "$batch_no" -lt "$MAX_BATCHES" ]]; then
+              echo "KAP koruma molası: ${COOLDOWN_SECONDS} saniye."
+              sleep "$COOLDOWN_SECONDS"
+            fi
+          done
+
+      - name: Son durum özeti
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          for name in [
+              "data/run_state.json",
+              "data/staging/failed_codes.json",
+              "data/diagnostics/request_failures.json",
+          ]:
+              path = Path(name)
+              print("\n---", name, "---")
+              if path.exists():
+                  payload = json.loads(path.read_text(encoding="utf-8"))
+                  print(json.dumps(payload, ensure_ascii=False, indent=2)[:12000])
+              else:
+                  print("Dosya henüz oluşmadı.")
+          PY
