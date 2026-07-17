@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """Piyasa Nabzı Türkiye — KAP YF/Y resumable public-data publisher.
 
-The extractor rules are imported from ``kap_yat_source.py`` (v9.1 smart-wait).
+The extractor rules are imported from ``kap_yat_source.py`` (v9.3 vertical-column risk).
 This file adds GitHub-safe batching, persistent checkpoints, diagnostics and
 final publication without replacing previously verified data with temporary
 HTTP failures.
@@ -33,7 +33,7 @@ from kap_yat_source import (
     test_one_fund,
 )
 
-PUBLISHER_VERSION = "github-resumable-v2.0"
+PUBLISHER_VERSION = "github-resumable-v2.3-v9.3"
 SCHEMA_VERSION = 2
 
 DATA_DIR = Path("data")
