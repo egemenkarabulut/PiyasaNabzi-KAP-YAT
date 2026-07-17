@@ -1,0 +1,16 @@
+{
+  "schema_version": 2,
+  "publisher_version": "github-resumable-v2.0",
+  "source_engine_version": "v9.1-smart-wait-1",
+  "status": "NOT_INITIALIZED",
+  "generated_at": "",
+  "universe": "KAP YF/Y active investment funds",
+  "fund_count": 0,
+  "transaction_status_counts": {
+    "AÇIK": 0,
+    "KAPALI": 0,
+    "KONTROL": 0
+  },
+  "quality_metrics": {},
+  "funds": {}
+}
