@@ -1,12 +1,12 @@
 {
   "schema_version": 2,
-  "updated_at": "2026-07-17T11:09:16+00:00",
-  "count": 1027,
+  "updated_at": "2026-07-17T11:17:02+00:00",
+  "count": 978,
   "category_counts": {
-    "MISSING_RISK": 51,
-    "MISSING_START": 68,
-    "MISSING_START_AND_RISK": 32,
-    "NOT_ATTEMPTED": 876
+    "MISSING_RISK": 53,
+    "MISSING_START": 69,
+    "MISSING_START_AND_RISK": 40,
+    "NOT_ATTEMPTED": 816
   },
   "failures": [
     {
@@ -2124,484 +2124,158 @@
       "error": ""
     },
     {
-      "fund_code": "NBO",
-      "fund_name": "NEO PORTFÖY BORÇLANMA ARACI FONLARI FON SEPETİ FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NBZ",
-      "fund_name": "NEO PORTFÖY BİRİNCİ SERBEST (DÖVİZ) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NCS",
-      "fund_name": "NUROL PORTFÖY ÜÇÜNCÜ SERBEST (DÖVİZ) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NCU",
-      "fund_name": "NEO PORTFÖY ÜÇÜNCÜ SERBEST (DÖVİZ) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
       "fund_code": "NCV",
       "fund_name": "NUROL PORTFÖY ÜÇÜNCÜ SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_START_AND_RISK",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "—",
+      "risk_level": "—",
+      "trade_status": "KAPALI",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/ncv-nurol-portfoy-ucuncu-serbest-fon",
+      "error": ""
     },
     {
       "fund_code": "NDC",
       "fund_name": "TACİRLER PORTFÖY NMÇ KAR PAYI ÖDEYEN SERBEST ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_START_AND_RISK",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "—",
+      "risk_level": "—",
+      "trade_status": "KAPALI",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/ndc-tacirler-portfoy-nmc-kar-payi-odeyen-serbest-ozel-fon",
+      "error": ""
     },
     {
       "fund_code": "NDE",
       "fund_name": "NUROL PORTFÖY BİRİNCİ DEĞİŞKEN FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_START_AND_RISK",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NDL",
-      "fund_name": "ALLBATROSS PORTFÖY ANADOLU HİSSE SENEDİ SERBEST (TL) ÖZEL FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NDS",
-      "fund_name": "NEO PORTFÖY DÖRDÜNCÜ SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "—",
+      "risk_level": "—",
+      "trade_status": "KAPALI",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/nde-nurol-portfoy-birinci-degisken-fon",
+      "error": ""
     },
     {
       "fund_code": "NDU",
       "fund_name": "NUROL PORTFÖY ÜÇÜNCÜ İSTATİSTİKSEL ARBİTRAJ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_START_AND_RISK",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NES",
-      "fund_name": "INVEO PORTFÖY DÖRDÜNCÜ SERBEST ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NFF",
-      "fund_name": "NEO PORTFÖY FON SEPETİ SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NFH",
-      "fund_name": "NEO PORTFÖY HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NFK",
-      "fund_name": "HEDEF PORTFÖY NEHİR HİSSE SENEDİ SERBEST (TL) FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "—",
+      "risk_level": "—",
+      "trade_status": "KAPALI",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/ndu-nurol-portfoy-ucuncu-istatistiksel-arbitraj-hisse-senedi-serbest-fon-hisse-senedi-yogun-fon",
+      "error": ""
     },
     {
       "fund_code": "NFS",
       "fund_name": "NUROL PORTFÖY BİRİNCİ FON SEPETİ FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_START_AND_RISK",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NHP",
-      "fund_name": "NEO PORTFÖY BİRİNCİ FON SEPETİ FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NHT",
-      "fund_name": "DENİZ PORTFÖY NH SERBEST (DÖVİZ) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NHV",
-      "fund_name": "NUROL PORTFÖY BİRİNCİ SERBEST (TL) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NHY",
-      "fund_name": "NEO PORTFÖY BİRİNCİ HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NIG",
-      "fund_name": "TRIVE PORTFÖY SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NIS",
-      "fund_name": "NEO PORTFÖY İSTATİSTİKSEL ARBİTRAJ SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NJF",
-      "fund_name": "NUROL PORTFÖY ALTIN KATILIM FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NJG",
-      "fund_name": "NUROL PORTFÖY BİRİNCİ SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NJR",
-      "fund_name": "NUROL PORTFÖY BİRİNCİ BORÇLANMA ARAÇLARI FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NJY",
-      "fund_name": "NUROL PORTFÖY BİRİNCİ KATILIM FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NKA",
-      "fund_name": "NEO PORTFÖY KATILIM SERBEST (DÖVİZ) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "—",
+      "risk_level": "—",
+      "trade_status": "KAPALI",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/nfs-nurol-portfoy-birinci-fon-sepeti-fonu",
+      "error": ""
     },
     {
       "fund_code": "NKC",
       "fund_name": "NEO PORTFÖY İKİNCİ HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_START",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NKH",
-      "fund_name": "NEO PORTFÖY İKİNCİ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NKJ",
-      "fund_name": "ATA PORTFÖY GIG SİGORTA SERBEST (TL) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NKK",
-      "fund_name": "ATA PORTFÖY SEKİZİNCİ SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NKL",
-      "fund_name": "AKTİF PORTFÖY KISA VADELİ SERBEST (TL) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NKM",
-      "fund_name": "NEO PORTFÖY KATILIM HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "—",
+      "risk_level": "6",
+      "trade_status": "AÇIK",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/nkc-neo-portfoy-ikinci-hisse-senedi-fonu-hisse-senedi-yogun-fon",
+      "error": ""
     },
     {
       "fund_code": "NKP",
       "fund_name": "NEO PORTFÖY KAR PAYI ÖDEYEN DEĞİŞKEN FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_RISK",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "2025",
+      "risk_level": "—",
+      "trade_status": "AÇIK",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/nkp-neo-portfoy-kar-payi-odeyen-degisken-fon",
+      "error": ""
     },
     {
       "fund_code": "NKS",
       "fund_name": "NUROL PORTFÖY GRANADA SERBEST (TL) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_RISK",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NKT",
-      "fund_name": "NUROL PORTFÖY BİRİNCİ KATILIM HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NKV",
-      "fund_name": "KUVEYT TÜRK PORTFÖY NKV KATILIM SERBEST ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NLC",
-      "fund_name": "TEB PORTFÖY ONALTINCI SERBEST (DÖVİZ) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NLD",
-      "fund_name": "AZİMUT PORTFÖY NL-2 SERBEST (DÖVİZ) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NLE",
-      "fund_name": "NUROL PORTFÖY EMLAK SEKTÖRÜ HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NLK",
-      "fund_name": "NUROL PORTFÖY KISA VADELİ SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NLL",
-      "fund_name": "GLOBAL MD PORTFÖY NİL SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NME",
-      "fund_name": "NUROL PORTFÖY MERCAN KATILIM SERBEST (DÖVİZ) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NMG",
-      "fund_name": "NEO PORTFÖY İKİNCİ SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "2023",
+      "risk_level": "—",
+      "trade_status": "KAPALI",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/nks-nurol-portfoy-granada-serbest-tl-fon",
+      "error": ""
     },
     {
       "fund_code": "NMP",
       "fund_name": "AK PORTFÖY NEMA PARA PİYASASI (TL) FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_START_AND_RISK",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NMU",
-      "fund_name": "NUROL PORTFÖY MUTLAK GETİRİ HEDEFLİ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NNF",
-      "fund_name": "HEDEF PORTFÖY BİRİNCİ HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "—",
+      "risk_level": "—",
+      "trade_status": "KAPALI",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/nmp-ak-portfoy-nema-para-piyasasi-tl-fonu",
+      "error": ""
     },
     {
       "fund_code": "NNS",
       "fund_name": "NUROL PORTFÖY EKSEN HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_START_AND_RISK",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NOA",
-      "fund_name": "NEO PORTFÖY ALFA SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NOI",
-      "fund_name": "TACİRLER PORTFÖY NOVA İSTATİSTİKSEL ARBİTRAJ SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NOV",
-      "fund_name": "AZİMUT PORTFÖY INOVA AGRO HİSSE SENEDİ SERBEST ÖZEL FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NP1",
-      "fund_name": "NEO PORTFÖY YASEMİN SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "—",
+      "risk_level": "—",
+      "trade_status": "KAPALI",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/nns-nurol-portfoy-eksen-hisse-senedi-serbest-fon-hisse-senedi-yogun-fon",
+      "error": ""
     },
     {
       "fund_code": "NP2",
       "fund_name": "NEO PORTFÖY İKİNCİ FON SEPETİ FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_START_AND_RISK",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NPH",
-      "fund_name": "NUROL PORTFÖY BİRİNCİ HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NPK",
-      "fund_name": "NEO PORTFÖY İPEKYOLU SERBEST ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NRC",
-      "fund_name": "NEO PORTFÖY BİRİNCİ DEĞİŞKEN FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NRG",
-      "fund_name": "NEO PORTFÖY BİRİNCİ PARA PİYASASI FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NRM",
-      "fund_name": "NEO PORTFÖY İKİNCİ SERBEST (DÖVİZ) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NSA",
-      "fund_name": "NEO PORTFÖY PARA PİYASASI KATILIM SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NSD",
-      "fund_name": "NUROL PORTFÖY DÖRDÜNCÜ SERBEST (DÖVİZ) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "NSH",
-      "fund_name": "NUROL PORTFÖY İSTATİSTİKSEL ARBİTRAJ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "—",
+      "risk_level": "—",
+      "trade_status": "KAPALI",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/np2-neo-portfoy-ikinci-fon-sepeti-fonu",
+      "error": ""
     },
     {
       "fund_code": "NSK",
