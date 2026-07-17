@@ -52,7 +52,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: v9.1 kural ve publisher testleri
+      - name: v9.3 kural ve publisher testleri
         run: pytest -q
 
       - name: Resumable batch taramasını çalıştır
