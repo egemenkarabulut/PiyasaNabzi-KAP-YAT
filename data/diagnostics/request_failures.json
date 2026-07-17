@@ -1,12 +1,12 @@
 {
   "schema_version": 2,
-  "updated_at": "2026-07-17T10:16:18+00:00",
-  "count": 1342,
+  "updated_at": "2026-07-17T10:20:49+00:00",
+  "count": 1285,
   "category_counts": {
-    "MISSING_RISK": 37,
+    "MISSING_RISK": 40,
     "MISSING_START": 54,
     "MISSING_START_AND_RISK": 15,
-    "NOT_ATTEMPTED": 1236
+    "NOT_ATTEMPTED": 1176
   },
   "failures": [
     {
@@ -1494,484 +1494,46 @@
       "error": ""
     },
     {
-      "fund_code": "IHC",
-      "fund_name": "INVEO PORTFÖY INTER SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
       "fund_code": "IHK",
       "fund_name": "İŞ PORTFÖY İŞ'TE KADIN HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_RISK",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IHP",
-      "fund_name": "İSTANBUL PORTFÖY İKİNCİ HİSSE SENEDİ SERBEST (TL) FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IHT",
-      "fund_name": "İŞ PORTFÖY İHRACATÇI ŞİRKETLER HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IHV",
-      "fund_name": "INVEO PORTFÖY BEŞİNCİ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IHY",
-      "fund_name": "BULLS PORTFÖY GMS HİSSE SENEDİ SERBEST ÖZEL FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IHZ",
-      "fund_name": "ALLBATROSS PORTFÖY İKİNCİ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IIA",
-      "fund_name": "İSTANBUL PORTFÖY ONBİRİNCİ SERBEST (TL) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IIC",
-      "fund_name": "İSTANBUL PORTFÖY ONÜÇÜNCÜ SERBEST (TL) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IIE",
-      "fund_name": "BULLS PORTFÖY İKİNCİ SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IIF",
-      "fund_name": "İŞ PORTFÖY İSTATİSTİKSEL ARBİTRAJ SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IIH",
-      "fund_name": "İSTANBUL PORTFÖY ÜÇÜNCÜ HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IIN",
-      "fund_name": "INVEO PORTFÖY PARA PİYASASI SERBEST (TL) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IIS",
-      "fund_name": "İSTANBUL PORTFÖY İKİNCİ SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IJA",
-      "fund_name": "INVEO PORTFÖY ATAK DEĞİŞKEN FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IJB",
-      "fund_name": "İŞ PORTFÖY DİJİTAL OYUN SEKTÖRÜ KARMA FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IJC",
-      "fund_name": "İŞ PORTFÖY YARI İLETKEN TEKNOLOJİLERİ DEĞİŞKEN FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IJE",
-      "fund_name": "İŞ PORTFÖY EFON SERBEST (DÖVİZ) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IJF",
-      "fund_name": "AZİMUT PORTFÖY EREN HİSSE SENEDİ SERBEST ÖZEL FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IJH",
-      "fund_name": "ICBC TURKEY PORTFÖY BİRİNCİ FON SEPETİ FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IJI",
-      "fund_name": "İSTANBUL PORTFÖY HİSSE SENEDİ SERBEST (TL) FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IJK",
-      "fund_name": "İSTANBUL PORTFÖY KEREM SERBEST (DÖVİZ) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IJL",
-      "fund_name": "İSTANBUL PORTFÖY SPİCA SERBEST (DÖVİZ) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IJP",
-      "fund_name": "İŞ PORTFÖY BLOCKCHAİN TEKNOLOJİLERİ KARMA FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IJS",
-      "fund_name": "İŞ PORTFÖY TÜRK REASÜRANS SERBEST ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IJT",
-      "fund_name": "İŞ PORTFÖY TARIM SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IJV",
-      "fund_name": "İSTANBUL PORTFÖY BİRİNCİ PARA PİYASASI (TL) FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IJZ",
-      "fund_name": "İŞ PORTFÖY SİBER GÜVENLİK TEKNOLOJİLERİ DEĞİŞKEN FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IK2",
-      "fund_name": "İŞ PORTFÖY KAR PAYI ÖDEYEN İKİNCİ SERBEST (DÖVİZ) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IKL",
-      "fund_name": "İŞ PORTFÖY SAĞLIK ŞİRKETLERİ KARMA FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IKP",
-      "fund_name": "İŞ PORTFÖY YENİLENEBİLİR ENERJİ KARMA FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "2021",
+      "risk_level": "—",
+      "trade_status": "AÇIK",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/ihk-is-portfoy-is-te-kadin-hisse-senedi-tl-fonu-hisse-senedi-yogun-fon",
+      "error": ""
     },
     {
       "fund_code": "IKV",
       "fund_name": "İŞ PORTFÖY İKİNCİ KISA VADELİ BORÇLANMA ARAÇLARI (TL) FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_RISK",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "ILC",
-      "fund_name": "İŞ PORTFÖY ONÜÇÜNCÜ SERBEST (DÖVİZ) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "ILE",
-      "fund_name": "İŞ PORTFÖY ANADOLU SİGORTA SERBEST (TL) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "ILH",
-      "fund_name": "İŞ PORTFÖY BİRİNCİ PARA PİYASASI SERBEST (TL) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "ILI",
-      "fund_name": "İŞ PORTFÖY İKİNCİ SERBEST (TL) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "ILM",
-      "fund_name": "İSTANBUL PORTFÖY ONUNCU SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "ILP",
-      "fund_name": "İŞ PORTFÖY POLMİNE SERBEST (DÖVİZ) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "ILU",
-      "fund_name": "İSTANBUL PORTFÖY ONALTINCI SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "ILZ",
-      "fund_name": "İŞ PORTFÖY TEMKİNLİ FON SEPETİ FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IMB",
-      "fund_name": "İSTANBUL PORTFÖY ALGORİTMİK MODEL HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IMF",
-      "fund_name": "İSTANBUL PORTFÖY MAESTRO SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IMG",
-      "fund_name": "GARANTİ PORTFÖY ING BANK KAR PAYI ÖDEYEN SERBEST (DÖVİZ) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IMH",
-      "fund_name": "İŞ PORTFÖY ANADOLU HAYAT EMEKLİLİK SERBEST ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IML",
-      "fund_name": "İŞ PORTFÖY MODEL PORTFÖY HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IMO",
-      "fund_name": "İŞ PORTFÖY ODAK SERBEST ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IMS",
-      "fund_name": "İŞ PORTFÖY MERMER SERBEST ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IMT",
-      "fund_name": "İŞ PORTFÖY TOROS SERBEST (DÖVİZ) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IMY",
-      "fund_name": "İŞ PORTFÖY SKYLARK SERBEST (DÖVİZ) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IMZ",
-      "fund_name": "İŞ PORTFÖY POYRAZ SERBEST (DÖVİZ) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "INH",
-      "fund_name": "GARANTİ PORTFÖY ING BANK ÖZEL BANKACILIK VE PLATİNUM DEĞİŞKEN ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "INR",
-      "fund_name": "İŞ PORTFÖY ONBİRİNCİ SERBEST (DÖVİZ) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "INV",
-      "fund_name": "INVEO PORTFÖY İSTATİSTİKSEL ARBİTRAJ KAR PAYI ÖDEYEN SERBEST (TL) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "INZ",
-      "fund_name": "INVEO PORTFÖY İSTATİSTİKSEL ARBİTRAJ SERBEST (TL) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IOG",
-      "fund_name": "İŞ PORTFÖY GÜMÜŞ SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "2025",
+      "risk_level": "—",
+      "trade_status": "KAPALI",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/ikv-is-portfoy-ikinci-kisa-vadeli-borclanma-araclari-tl-fonu",
+      "error": ""
     },
     {
       "fund_code": "IOH",
       "fund_name": "İŞ PORTFÖY ONSEKİZİNCİ SERBEST (DÖVİZ) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_RISK",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IOJ",
-      "fund_name": "İŞ PORTFÖY EKİM 2026 SERBEST (DÖVİZ) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IOL",
-      "fund_name": "İŞ PORTFÖY OSK SERBEST (DÖVİZ) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "IOM",
-      "fund_name": "İSTANBUL PORTFÖY ONBEŞİNCİ SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "ION",
-      "fund_name": "İSTANBUL PORTFÖY ONİKİNCİ SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "2023",
+      "risk_level": "—",
+      "trade_status": "KAPALI",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/ioh-is-portfoy-onsekizinci-serbest-doviz-fon",
+      "error": ""
     },
     {
       "fund_code": "IOO",
