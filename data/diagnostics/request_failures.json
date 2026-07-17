@@ -1,12 +1,12 @@
 {
   "schema_version": 2,
-  "updated_at": "2026-07-17T12:10:39+00:00",
-  "count": 667,
+  "updated_at": "2026-07-17T12:18:30+00:00",
+  "count": 620,
   "category_counts": {
-    "MISSING_RISK": 63,
-    "MISSING_START": 103,
-    "MISSING_START_AND_RISK": 45,
-    "NOT_ATTEMPTED": 456
+    "MISSING_RISK": 70,
+    "MISSING_START": 106,
+    "MISSING_START_AND_RISK": 48,
+    "NOT_ATTEMPTED": 396
   },
   "failures": [
     {
@@ -2964,484 +2964,186 @@
       "error": ""
     },
     {
-      "fund_code": "RYU",
-      "fund_name": "ROTA PORTFÖY YİRMİÜÇÜNCÜ SERBEST (DÖVİZ) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "RZR",
-      "fund_name": "ROTA PORTFÖY RZR SERBEST ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
       "fund_code": "SAP",
       "fund_name": "AK PORTFÖY ŞEKERBANK PARA PİYASASI (TL) FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_START",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SAR",
-      "fund_name": "İŞ PORTFÖY SARDUNYA SERBEST (DÖVİZ) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SAS",
-      "fund_name": "AK PORTFÖY SABANCI TOPLULUĞU ŞİRKETLERİ ENDEKSİ HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SAT",
-      "fund_name": "AZİMUT PORTFÖY RASAT HİSSE SENEDİ SERBEST ÖZEL FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SBH",
-      "fund_name": "SPARTA PORTFÖY BİRİNCİ HİSSE SENEDİ SERBEST (TL) FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SBI",
-      "fund_name": "STRATEJİ PORTFÖY BİRİNCİ SERBEST (TL) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "—",
+      "risk_level": "2",
+      "trade_status": "KAPALI",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/sap-ak-portfoy-sekerbank-para-piyasasi-tl-fonu",
+      "error": ""
     },
     {
       "fund_code": "SBR",
       "fund_name": "STRATEJİ PORTFÖY BİRİNCİ SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_RISK",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SBS",
-      "fund_name": "STRATEJİ PORTFÖY BAŞAK SERBEST (DÖVİZ) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SCZ",
-      "fund_name": "AK PORTFÖY SEKİZİNCİ SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SDA",
-      "fund_name": "AK PORTFÖY 2026 SERBEST (DÖVİZ) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "2024",
+      "risk_level": "—",
+      "trade_status": "KAPALI",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/sbr-strateji-portfoy-birinci-serbest-fon",
+      "error": ""
     },
     {
       "fund_code": "SDP",
       "fund_name": "STRATEJİ PORTFÖY ADBB KAR PAYI ÖDEYEN SERBEST ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_START_AND_RISK",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "—",
+      "risk_level": "—",
+      "trade_status": "KAPALI",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/sdp-strateji-portfoy-adbb-kar-payi-odeyen-serbest-ozel-fon",
+      "error": ""
     },
     {
       "fund_code": "SDS",
       "fund_name": "SPARTA PORTFÖY BİRİNCİ SERBEST (DÖVİZ) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_START_AND_RISK",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "—",
+      "risk_level": "—",
+      "trade_status": "KAPALI",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/sds-sparta-portfoy-birinci-serbest-doviz-fon",
+      "error": ""
     },
     {
       "fund_code": "SEH",
       "fund_name": "A1 CAPİTAL PORTFÖY SANAYİ SEKTÖRÜ HİSSE SENEDİ SERBEST (TL) FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_RISK",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SER",
-      "fund_name": "AK PORTFÖY 2028 SERBEST (DÖVİZ) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "2026",
+      "risk_level": "—",
+      "trade_status": "KAPALI",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/seh-a1-capital-portfoy-sanayi-sektoru-hisse-senedi-serbest-tl-fon-hisse-senedi-yogun-fon",
+      "error": ""
     },
     {
       "fund_code": "SFA",
       "fund_name": "STATECH PORTFÖY ALPHA SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_RISK",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "2022",
+      "risk_level": "—",
+      "trade_status": "KAPALI",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/sfa-statech-portfoy-alpha-serbest-fon",
+      "error": ""
     },
     {
       "fund_code": "SFR",
       "fund_name": "NUROL PORTFÖY SAFİR HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_START_AND_RISK",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SFS",
-      "fund_name": "AZİMUT PORTFÖY AGRESİF FON SEPETİ FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SGT",
-      "fund_name": "GARANTİ PORTFÖY SİBER GÜVENLİK TEKNOLOJİLERi DEĞİŞKEN FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SHE",
-      "fund_name": "TEB PORTFÖY ÖNCE KADIN DEĞİŞKEN FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SHI",
-      "fund_name": "PARDUS PORTFÖY SEKİZİNCİ HİSSE SENEDİ SERBEST (TL) FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SHU",
-      "fund_name": "SPARTA PORTFÖY ÜÇÜNCÜ HİSSE SENEDİ SERBEST (TL) FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SIA",
-      "fund_name": "SPARTA PORTFÖY BİRİNCİ İSTATİSTİKSEL ARBİTRAJ HİSSE SENEDİ SERBEST (TL) FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SIS",
-      "fund_name": "SPARTA PORTFÖY İKİNCİ HİSSE SENEDİ SERBEST (TL) FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SJP",
-      "fund_name": "STRATEJİ PORTFÖY KAR PAYI ÖDEYEN İKİNCİ SERBEST (DÖVİZ) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SKL",
-      "fund_name": "TEB PORTFÖY ŞEKERBANK PARA PİYASASI (TL) FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SKO",
-      "fund_name": "STRATEJİ PORTFÖY KAR PAYI ÖDEYEN HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SKS",
-      "fund_name": "İŞ PORTFÖY ASKA SERBEST (DÖVİZ) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SKT",
-      "fund_name": "FİBA PORTFÖY ŞEKERBANK KISA VADELİ BORÇLANMA ARAÇLARI FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SKZ",
-      "fund_name": "NEO PORTFÖY SEKİZİNCİ SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SLF",
-      "fund_name": "ROTA PORTFÖY ŞEKERBANK PARA PİYASASI (TL) FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SLG",
-      "fund_name": "QNB PORTFÖY ALGORİTMİK STRATEJİLER HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SLN",
-      "fund_name": "ALLBATROSS PORTFÖY ASLAN SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SLR",
-      "fund_name": "QNB PORTFÖY SOLARİS SERBEST ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SLS",
-      "fund_name": "ALLBATROSS PORTFÖY SELEN SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SMP",
-      "fund_name": "İŞ PORTFÖY SOMPO SİGORTA KAR PAYI ÖDEYEN SERBEST (TL) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "—",
+      "risk_level": "—",
+      "trade_status": "KAPALI",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/sfr-nurol-portfoy-safir-hisse-senedi-fonu-hisse-senedi-yogun-fon",
+      "error": ""
     },
     {
       "fund_code": "SNY",
       "fund_name": "ATLAS PORTFÖY SANAYİ SEKTÖRÜ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_RISK",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "2025",
+      "risk_level": "—",
+      "trade_status": "AÇIK",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/sny-atlas-portfoy-sanayi-sektoru-hisse-senedi-serbest-fon-hisse-senedi-yogun-fon",
+      "error": ""
     },
     {
       "fund_code": "SOS",
       "fund_name": "HEDEF PORTFÖY SAĞLIK SEKTÖRÜ DEĞİŞKEN FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_START",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SPA",
-      "fund_name": "AZİMUT PORTFÖY 6.0 SERBEST (DÖVİZ) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SPD",
-      "fund_name": "AZİMUT PORTFÖY BEG SERBEST (DÖVİZ) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SPE",
-      "fund_name": "AZİMUT PORTFÖY 5.0 SERBEST (DÖVİZ) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SPN",
-      "fund_name": "AZİMUT PORTFÖY İSTATİSTİKSEL ARBİTRAJ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "—",
+      "risk_level": "3",
+      "trade_status": "AÇIK",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/sos-hedef-portfoy-saglik-sektoru-degisken-fon",
+      "error": ""
     },
     {
       "fund_code": "SPP",
       "fund_name": "SPARTA PORTFÖY BİRİNCİ PARA PİYASASI (TL) FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_RISK",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SPR",
-      "fund_name": "BV PORTFÖY SPOR ENDÜSTRİSİ DEĞİŞKEN FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SPT",
-      "fund_name": "AKTİF PORTFÖY KATILIM FON SEPETİ FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SPU",
-      "fund_name": "STRATEJİ PORTFÖY PARA PİYASASI FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SRA",
-      "fund_name": "AZİMUT PORTFÖY ASERVA SERBEST ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SRE",
-      "fund_name": "AZİMUT PORTFÖY SİRİUS SERBEST (DÖVİZ) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "2025",
+      "risk_level": "—",
+      "trade_status": "KAPALI",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/spp-sparta-portfoy-birinci-para-piyasasi-tl-fonu",
+      "error": ""
     },
     {
       "fund_code": "SRH",
       "fund_name": "İSTANBUL PORTFÖY SÜRDÜRÜLEBİLİRLİK HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_START",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SRL",
-      "fund_name": "PARDUS PORTFÖY SÜRDÜRÜLEBİLİRLİK HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SRO",
-      "fund_name": "AZİMUT PORTFÖY SKY HİSSE SENEDİ SERBEST ÖZEL FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "—",
+      "risk_level": "6",
+      "trade_status": "AÇIK",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/srh-istanbul-portfoy-surdurulebilirlik-hisse-senedi-tl-fonu-hisse-senedi-yogun-fon",
+      "error": ""
     },
     {
       "fund_code": "SSD",
       "fund_name": "İŞ PORTFÖY SET SERBEST (DÖVİZ) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_RISK",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SSE",
-      "fund_name": "ATLAS PORTFÖY İKİNCİ SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SSF",
-      "fund_name": "INVEO PORTFÖY SEKİZİNCİ SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "2024",
+      "risk_level": "—",
+      "trade_status": "KAPALI",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/ssd-is-portfoy-set-serbest-doviz-ozel-fon",
+      "error": ""
     },
     {
       "fund_code": "SSK",
       "fund_name": "DENİZ PORTFÖY SAĞLIK SEKTÖRÜ DEĞİŞKEN FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_RISK",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SSN",
-      "fund_name": "DENİZ PORTFÖY 880 SERBEST (DÖVİZ) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SSO",
-      "fund_name": "AK PORTFÖY AK SANDIK SERBEST ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SSS",
-      "fund_name": "YAPI KREDİ PORTFÖY SAVUNMA SANAYİİ ŞİRKETLERİ ENDEKSİ HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "SST",
-      "fund_name": "STRATEJİ PORTFÖY İSTATİSTİKSEL ARBİTRAJ SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "2024",
+      "risk_level": "—",
+      "trade_status": "KAPALI",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/ssk-deniz-portfoy-saglik-sektoru-degisken-fon",
+      "error": ""
     },
     {
       "fund_code": "ST1",
