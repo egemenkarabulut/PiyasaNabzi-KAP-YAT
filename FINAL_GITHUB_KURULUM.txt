@@ -1,0 +1,14 @@
+PIYASA NABZI YAT/KAP — v2.3 / v9.3 FINAL
+========================================
+
+Bu paket v2.0 GitHub resumable motoru, v9.3 dikey kolon risk ayrıştırıcısı ve Windows yerel başlatıcıyı tek klasörde birleştirir.
+
+GitHub'a yükledikten sonra:
+1) Settings > Actions > General > Workflow permissions > Read and write permissions
+2) Actions > YAT KAP Merkezi Veri Güncelleme > Run workflow
+3) Varsayılanları değiştirmeyin: 60 / 40 / 180 / 1.35
+
+Her fon sonucu çalışma sırasında data/staging/yat_kap_progress.json dosyasına atomik yazılır.
+Her batch sonunda data/ klasörü GitHub'a commit/push edilir.
+Rerun, kaydedilmiş checkpoint'i okuyarak bekleyen/başarısız/eksik/eski kayıtlardan devam eder.
+Resmî data/yat_fund_enrichment.json yalnız kalite eşiği geçince değiştirilir.
