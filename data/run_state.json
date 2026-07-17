@@ -2,36 +2,36 @@
   "schema_version": 2,
   "publisher_version": "github-resumable-v2.3-v9.3",
   "source_engine_version": "v9.3-vertical-column-risk-1",
-  "updated_at": "2026-07-17T09:23:02+00:00",
+  "updated_at": "2026-07-17T09:27:27+00:00",
   "status": "IN_PROGRESS",
   "batch_processed": 60,
   "batch_size": 60,
-  "saved_result_count": 540,
+  "saved_result_count": 600,
   "total_kap_yf_count": 2136,
   "queue_before": {
-    "unattempted": 1656,
-    "technical_retryable": 0,
-    "field_retryable": 57,
-    "stale": 0,
-    "pending_total": 1713
-  },
-  "queue_after": {
     "unattempted": 1596,
     "technical_retryable": 0,
     "field_retryable": 64,
     "stale": 0,
     "pending_total": 1660
   },
+  "queue_after": {
+    "unattempted": 1536,
+    "technical_retryable": 0,
+    "field_retryable": 64,
+    "stale": 0,
+    "pending_total": 1600
+  },
   "quality_metrics": {
     "total_kap_yf_count": 2136,
-    "saved_result_count": 540,
-    "coverage_ratio": 0.252809,
-    "valid_page_count": 540,
-    "valid_page_ratio": 0.252809,
-    "known_trade_count": 540,
-    "known_trade_ratio": 0.252809,
+    "saved_result_count": 600,
+    "coverage_ratio": 0.280899,
+    "valid_page_count": 600,
+    "valid_page_ratio": 0.280899,
+    "known_trade_count": 600,
+    "known_trade_ratio": 0.280899,
     "tefas_traded_count": 1023,
-    "pending_total": 1660
+    "pending_total": 1600
   },
   "official_file_updated": false,
   "next_action": "Run the workflow again; only pending, failed, incomplete or stale records will be selected."
