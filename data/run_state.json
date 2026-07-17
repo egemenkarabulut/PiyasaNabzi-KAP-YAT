@@ -2,25 +2,25 @@
   "schema_version": 2,
   "publisher_version": "github-resumable-v2.3-v9.3",
   "source_engine_version": "v9.3-vertical-column-risk-1",
-  "updated_at": "2026-07-17T13:17:55+00:00",
+  "updated_at": "2026-07-17T13:30:38+00:00",
   "status": "IN_PROGRESS",
   "batch_processed": 60,
   "batch_size": 60,
   "saved_result_count": 2138,
   "total_kap_yf_count": 2138,
   "queue_before": {
-    "unattempted": 38,
-    "technical_retryable": 0,
-    "field_retryable": 265,
-    "stale": 0,
-    "pending_total": 303
-  },
-  "queue_after": {
     "unattempted": 0,
     "technical_retryable": 0,
     "field_retryable": 266,
     "stale": 0,
     "pending_total": 266
+  },
+  "queue_after": {
+    "unattempted": 0,
+    "technical_retryable": 0,
+    "field_retryable": 244,
+    "stale": 0,
+    "pending_total": 244
   },
   "quality_metrics": {
     "total_kap_yf_count": 2138,
@@ -31,7 +31,7 @@
     "known_trade_count": 2138,
     "known_trade_ratio": 1.0,
     "tefas_traded_count": 1023,
-    "pending_total": 266
+    "pending_total": 244
   },
   "official_file_updated": false,
   "next_action": "Run the workflow again; only pending, failed, incomplete or stale records will be selected."
