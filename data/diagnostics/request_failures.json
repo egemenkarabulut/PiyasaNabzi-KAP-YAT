@@ -1,12 +1,12 @@
 {
   "schema_version": 2,
-  "updated_at": "2026-07-17T11:32:30+00:00",
-  "count": 876,
+  "updated_at": "2026-07-17T11:37:02+00:00",
+  "count": 819,
   "category_counts": {
     "MISSING_RISK": 55,
-    "MISSING_START": 83,
-    "MISSING_START_AND_RISK": 42,
-    "NOT_ATTEMPTED": 696
+    "MISSING_START": 85,
+    "MISSING_START_AND_RISK": 43,
+    "NOT_ATTEMPTED": 636
   },
   "failures": [
     {
@@ -2530,484 +2530,46 @@
       "error": ""
     },
     {
-      "fund_code": "PAB",
-      "fund_name": "A1 CAPİTAL PORTFÖY PARA PİYASASI (TL) FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PAC",
-      "fund_name": "AZİMUT PORTFÖY AC HİSSE SENEDİ SERBEST ÖZEL FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PAF",
-      "fund_name": "PARDUS PORTFÖY ALTIN FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PAI",
-      "fund_name": "AK PORTFÖY ING ÖZEL BANKACILIK VE PLATİNUM MUTLAK GETİRİ HEDEFLİ DEĞİŞKEN ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PAL",
-      "fund_name": "AK PORTFÖY ALTINCI SERBEST (DÖVİZ) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PAO",
-      "fund_name": "PARDUS PORTFÖY ANADOLU HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PAP",
-      "fund_name": "AK PORTFÖY MİSTRAL SERBEST (DÖVİZ) ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PAU",
-      "fund_name": "GARANTİ PORTFÖY SERBEST (DÖVİZ-POUND) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PBE",
-      "fund_name": "PUSULA PORTFÖY BATI SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PBF",
-      "fund_name": "PHİLLİP PORTFÖY BİRİNCİ SERBEST ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PBH",
-      "fund_name": "PUSULA PORTFÖY BİRİNCİ HİSSE SENEDİ SERBEST (TL) FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
       "fund_code": "PBI",
       "fund_name": "PARDUS PORTFÖY BİRİNCİ FON SEPETİ FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_START",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PBK",
-      "fund_name": "ASTRA PORTFÖY BİRİNCİ KATILIM SERBEST (DÖVİZ) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PBN",
-      "fund_name": "PİRAMİT PORTFÖY BİRİNCİ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PBR",
-      "fund_name": "PUSULA PORTFÖY BİRİNCİ DEĞİŞKEN FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PBS",
-      "fund_name": "AZİMUT PORTFÖY BOĞAZİÇİ SERBEST (DÖVİZ) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PBY",
-      "fund_name": "PARDUS PORTFÖY BIST 100 DIŞI ŞİRKETLER HİSSE SENEDİ SERBEST (TL) FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PCE",
-      "fund_name": "PARDUS PORTFÖY İNCİ SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PCH",
-      "fund_name": "PARDUS PORTFÖY CAPİTAL HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PCN",
-      "fund_name": "PERFORM PORTFÖY ÜÇÜNCÜ SERBEST (DÖVİZ) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PCS",
-      "fund_name": "PUSULA PORTFÖY ÜÇÜNCÜ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PDC",
-      "fund_name": "PUSULA PORTFÖY DÖRDÜNCÜ HİSSE SENEDİ SERBEST (TL) FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PDD",
-      "fund_name": "ASTRA PORTFÖY KATILIM FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PDE",
-      "fund_name": "PUSULA PORTFÖY DENGE KATILIM SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PDF",
-      "fund_name": "ASTRA PORTFÖY BİRİNCİ SERBEST (DÖVİZ) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PDG",
-      "fund_name": "PUSULA PORTFÖY DOĞU HİSSE SENEDİ SERBEST (TL) FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PDH",
-      "fund_name": "PARDUS PORTFÖY DOĞU HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PDR",
-      "fund_name": "PHİLLİP PORTFÖY SÜRDÜRÜLEBİLİRLİK SERBEST ÖZEL FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PDS",
-      "fund_name": "PARDUS PORTFÖY DÖRDÜNCÜ SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PEA",
-      "fund_name": "PERFORM PORTFÖY ALTIN FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PFO",
-      "fund_name": "PHİLLİP PORTFÖY FON SEPETİ FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PFS",
-      "fund_name": "ATLAS PORTFÖY FON SEPETİ FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PGD",
-      "fund_name": "ASTRA PORTFÖY AGRESİF DEĞİŞKEN FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PGE",
-      "fund_name": "PARDUS PORTFÖY GÜNEY HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PGH",
-      "fund_name": "PUSULA PORTFÖY GÜNEY HİSSE SENEDİ SERBEST (TL) FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PGS",
-      "fund_name": "AZİMUT PORTFÖY PAY GERİ ALIMI YAPAN ŞİRKETLER HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PHB",
-      "fund_name": "PUSULA PORTFÖY BEŞİNCİ HİSSE SENEDİ SERBEST (TL) FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PHE",
-      "fund_name": "PUSULA PORTFÖY HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PHF",
-      "fund_name": "PİRAMİT PORTFÖY BİST 50 DIŞI ŞİRKETLER HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PHI",
-      "fund_name": "PİRAMİT PORTFÖY HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PHK",
-      "fund_name": "PHİLLİP PORTFÖY KATILIM HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PHN",
-      "fund_name": "PUSULA PORTFÖY İKİNCİ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PHS",
-      "fund_name": "PERFORM PORTFÖY İKİNCİ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PHY",
-      "fund_name": "PARDUS PORTFÖY BATI HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "—",
+      "risk_level": "4",
+      "trade_status": "KAPALI",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/pbi-pardus-portfoy-birinci-fon-sepeti-fonu",
+      "error": ""
     },
     {
       "fund_code": "PIA",
       "fund_name": "RE-PIE PORTFÖY İKİNCİ ALGORİTMİK STRATEJİLER SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_START_AND_RISK",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PID",
-      "fund_name": "PİRAMİT PORTFÖY DEĞİŞKEN FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PIL",
-      "fund_name": "ROTA PORTFÖY PİL TEKNOLOJİLERİ VE ENERJİ FON SEPETİ FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PIP",
-      "fund_name": "GARANTİ PORTFÖY İKİNCİ PARA PİYASASI SERBEST (TL) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PIR",
-      "fund_name": "PİRAMİT PORTFÖY ALTIN FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PIS",
-      "fund_name": "PARDUS PORTFÖY İKİNCİ KISA VADELİ SERBEST (TL) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PJL",
-      "fund_name": "PHİLLİP PORTFÖY PARA PİYASASI FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PJP",
-      "fund_name": "PERFORM PORTFÖY BİRİNCİ SERBEST (DÖVİZ) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "—",
+      "risk_level": "—",
+      "trade_status": "KAPALI",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/pia-re-pie-portfoy-ikinci-algoritmik-stratejiler-serbest-fon",
+      "error": ""
     },
     {
       "fund_code": "PK1",
       "fund_name": "AHLATCI PORTFÖY PARA PİYASASI KATILIM (TL) FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
+      "category": "MISSING_START",
+      "attempt_count": 1,
       "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PKD",
-      "fund_name": "PUSULA PORTFÖY İKİNCİ DENGE KATILIM SERBEST FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PKE",
-      "fund_name": "ALLBATROSS PORTFÖY İPEK HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PKF",
-      "fund_name": "ATA PORTFÖY ALTIN KATILIM FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PKH",
-      "fund_name": "DENİZ PORTFÖY POYRAZ KATILIM HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PKL",
-      "fund_name": "PUSULA PORTFÖY KATILIM SERBEST (TL) FON",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PKM",
-      "fund_name": "PUSULA PORTFÖY PARA PİYASASI KATILIM (TL) FONU",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
-    },
-    {
-      "fund_code": "PKN",
-      "fund_name": "PİRAMİT PORTFÖY İKİNCİ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "NOT_ATTEMPTED",
-      "attempt_count": 0,
-      "retryable": true,
-      "error": "Henüz taranmadı."
+      "http_status": 200,
+      "page_code_verified": "EVET",
+      "start_year": "—",
+      "risk_level": "1",
+      "trade_status": "KAPALI",
+      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/pk1-ahlatci-portfoy-para-piyasasi-katilim-tl-fonu",
+      "error": ""
     },
     {
       "fund_code": "PKP",
