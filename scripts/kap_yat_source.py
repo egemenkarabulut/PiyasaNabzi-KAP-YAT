@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-KAP YAT HAM + DETAY + TEFAS İŞLEM LİSTESİ DOĞRULAMA TESTİ v9.3 DİKEY KOLON RİSK
+KAP YAT HAM + DETAY + TEFAS DOĞRULAMA TESTİ v9.5
 ===================================
 
 Bu dosya, önce KAP YF aktif fon ana listesini indirir; ardından seçilen fonların
@@ -11,6 +11,7 @@ KAP "Genel Bilgiler" sayfasına giderek yalnızca şu üç alanı test eder:
 1) Başlangıç tarihi / başlangıç yılı
 2) Risk seviyesi
 3) TEFAS işlem durumu
+4) KAP kaynakları eksikse TEFAS 60 aylık başlangıç tarihi yedeği
 
 Çalışma biçimi:
 - KAP ana liste: JSON/API
@@ -63,6 +64,12 @@ import requests
 from bs4 import BeautifulSoup, Tag
 from pypdf import PdfReader
 
+from tefas_start_year_source import (
+    TEFAS_START_YEAR_SOURCE,
+    TefasStartYearRateLimiter,
+    fetch_tefas_start_year,
+)
+
 
 # -----------------------------------------------------------------------------
 # SABİTLER
@@ -103,7 +110,7 @@ BLOCK_COOLDOWN_SECONDS = 600
 REQUEST_TIMEOUT_SECONDS = 50
 MAX_RETRIES = 4
 DEFAULT_RETRY_ROUNDS = 3
-SCRIPT_VERSION = "v9.4-multi-source-risk-start-1"
+SCRIPT_VERSION = "v9.5-kap-pdf-tefas-start-fallback-1"
 
 HEADERS_JSON = {
     "User-Agent": (
@@ -2336,6 +2343,7 @@ def test_one_fund(
     tefas_list_error: str,
     rate_limiter: GlobalRateLimiter,
     save_raw_html: bool,
+    tefas_start_rate_limiter: TefasStartYearRateLimiter | None = None,
 ) -> FundResult:
     now = datetime.now().isoformat(timespec="seconds")
     db = db_values.get(fund.fund_code, {})
@@ -2345,6 +2353,7 @@ def test_one_fund(
     fallback_used: list[str] = []
     fallback_error = ""
     fallback_attempted = "HAYIR"
+    tefas_start_attempted = False
 
     try:
         session = thread_session()
@@ -2439,6 +2448,47 @@ def test_one_fund(
             except Exception as pdf_exc:
                 fallback_error = f"{type(pdf_exc).__name__}: {pdf_exc}"
 
+        # KAP HTML ve KAP YBF PDF başlangıç tarihi üretmediyse, yalnız bu eksik
+        # alan için TEFAS 60 aylık JSON serisi son yedek kaynaktır. En eski
+        # geçerli tarih kullanılır; ilk fiyat 0 olsa bile tarih reddedilmez.
+        if start.value == "—":
+            tefas_start_attempted = True
+            tefas_start = fetch_tefas_start_year(
+                fund.fund_code,
+                session=session,
+                rate_limiter=tefas_start_rate_limiter,
+            )
+            if tefas_start.accepted:
+                start = ParseValue(
+                    value=tefas_start.start_year,
+                    raw_value=tefas_start.start_date,
+                    source_label=tefas_start.source,
+                    evidence=tefas_start.evidence,
+                    confidence=tefas_start.confidence,
+                    matched_pattern="resultList.en_eski_gecerli_tarih",
+                    matched_scope="TEFAS_60_AY_JSON",
+                    decision_reason=tefas_start.decision,
+                )
+                fallback_used.append("BAŞLANGIÇ-TEFAS-JSON")
+            else:
+                start = ParseValue(
+                    value="—",
+                    raw_value="",
+                    source_label=tefas_start.source,
+                    evidence=tefas_start.evidence,
+                    confidence="YOK",
+                    matched_pattern="resultList.en_eski_gecerli_tarih",
+                    matched_scope="TEFAS_60_AY_JSON",
+                    decision_reason=tefas_start.decision,
+                )
+                tefas_message = (
+                    f"TEFAS_START_{tefas_start.status}: "
+                    f"{tefas_start.error or tefas_start.decision}"
+                )
+                fallback_error = (
+                    f"{fallback_error} | {tefas_message}" if fallback_error else tefas_message
+                )
+
         should_save = (
             save_raw_html
             or code_verified == "HAYIR"
@@ -2458,6 +2508,8 @@ def test_one_fund(
         parse_method = f"{SCRIPT_VERSION} | KAP_LIST_JSON + KAP_DETAIL_VISIBLE_HTML + TEFAS_TRADED_LIST_JSON"
         if investor_form_url:
             parse_method += " + KAP_SUMMARY_HTML + KAP_YBF_PDF"
+        if tefas_start_attempted:
+            parse_method += " + TEFAS_START_YEAR_JSON_60M"
 
         return FundResult(
             test_time=now,
@@ -2642,8 +2694,20 @@ def retry_needed(result: FundResult | None) -> bool:
     )
 
 
+def start_source_priority(source: Any) -> int:
+    """Başlangıç kaynağı önceliği: KAP HTML > KAP PDF > TEFAS JSON."""
+    normalized = normalize_text(source).upper()
+    if normalized.startswith("KAP_DETAIL_HTML"):
+        return 30
+    if normalized.startswith("KAP_YBF_PDF"):
+        return 20
+    if normalized == TEFAS_START_YEAR_SOURCE or normalized.startswith("TEFAS_"):
+        return 10
+    return 0
+
+
 def merge_results(previous: FundResult | None, current: FundResult) -> FundResult:
-    """Yeni deneme kötüleşirse eski doğru alanları korur; eksik alanları yeni sonuçla tamamlar."""
+    """Yeni deneme kötüleşirse eski doğru alanları ve daha güçlü kaynağı korur."""
     if previous is None:
         return current
 
@@ -2656,7 +2720,14 @@ def merge_results(previous: FundResult | None, current: FundResult) -> FundResul
     merged = asdict(current)
     old = asdict(previous)
 
-    if current.start_year in {"", "—"} and previous.start_year not in {"", "—"}:
+    keep_previous_start = bool(
+        previous.start_year not in {"", "—"}
+        and (
+            current.start_year in {"", "—"}
+            or start_source_priority(previous.start_source) > start_source_priority(current.start_source)
+        )
+    )
+    if keep_previous_start:
         for key in ("start_date", "start_year", "start_source", "start_evidence", "start_confidence"):
             merged[key] = old[key]
 
@@ -2836,6 +2907,7 @@ def run_fund_batch(
         routine_request_limit=ROUTINE_REQUEST_LIMIT,
         routine_cooldown_seconds=ROUTINE_COOLDOWN_SECONDS,
     )
+    tefas_start_rate_limiter = TefasStartYearRateLimiter(15, 20)
     with ThreadPoolExecutor(max_workers=workers) as executor:
         future_map = {
             executor.submit(
@@ -2846,6 +2918,7 @@ def run_fund_batch(
                 tefas_list_error,
                 rate_limiter,
                 save_raw_html,
+                tefas_start_rate_limiter,
             ): fund
             for fund in funds_to_run
         }
@@ -2961,7 +3034,7 @@ def build_summary(
         "",
         "KAYNAK MANTIĞI",
         "-" * 35,
-        "Başlangıç : KAP Genel Bilgiler > Fonun Halka Arz Tarihi; eksikse Yatırımcı Bilgi Formu PDF",
+        "Başlangıç : KAP Genel Bilgiler > alternatif halka arz/ihraç etiketleri; eksikse KAP YBF PDF; yine eksikse TEFAS 60 ay JSON en eski geçerli tarih",
         "Risk      : KAP Genel Bilgiler > Risk Değeri; eksikse Yatırımcı Bilgi Formu PDF",
         "İşlem     : KAP Genel Bilgiler > Alım Satım Yerleri; çıplak TEFAS varsa TEFAS işlem gören fon listesi",
         "",
@@ -2974,6 +3047,8 @@ def build_summary(
         "Kurucu yanında TEFAS/TEFDP üyesi fon dağıtım kuruluşları açıkça yazıyorsa AÇIK kabul edilir.",
         "Yalnız çıplak TEFAS kelimesi varsa güncel TEFAS İşlem Gören Yatırım Fonları listesiyle doğrulanır.",
         "Başlangıç tarihi etiket önceliğiyle seçilir; bölümdeki ilgisiz en eski tarih alınmaz.",
+        "TEFAS yedeğinde en eski geçerli tarih alınır; fiyat 0 olsa bile tarih geçerlidir.",
+        "TEFAS ilk tarihi 60 aylık doğal sınırın 20 gün çevresindeyse yıl üretilmez.",
         "Çoklu pay grubu risklerinde tüm değerler korunur ve ana risk olarak en yüksek değer seçilir.",
         "BİLİNMİYOR yalnızca teknik erişim veya DOM ayrıştırma hatasında bırakılır.",
         "Tüm eski alternatif kelimeler ve PDF fallback metinleri korunmuştur.",
