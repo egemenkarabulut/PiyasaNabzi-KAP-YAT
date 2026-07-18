@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """Piyasa Nabzı Türkiye — KAP YF/Y resumable public-data publisher.
 
-The extractor rules are imported from ``kap_yat_source.py`` (v9.4 multi-source risk/start).
+The extractor rules are imported from ``kap_yat_source.py`` (v9.5 KAP/PDF/TEFAS start fallback).
 This file adds GitHub-safe batching, persistent checkpoints, diagnostics and
 final publication without replacing previously verified data with temporary
 HTTP failures.
@@ -32,8 +32,9 @@ from kap_yat_source import (
     run_internal_rule_self_test,
     test_one_fund,
 )
+from tefas_start_year_source import TefasStartYearRateLimiter
 
-PUBLISHER_VERSION = "github-resumable-v2.4-v9.4"
+PUBLISHER_VERSION = "github-resumable-v2.5-v9.5"
 SCHEMA_VERSION = 2
 
 DATA_DIR = Path("data")
@@ -44,11 +45,14 @@ REQUEST_FAILURES_PATH = DATA_DIR / "diagnostics" / "request_failures.json"
 RUN_STATE_PATH = DATA_DIR / "run_state.json"
 ATTEMPT_EVENTS_PATH = DATA_DIR / "diagnostics" / "attempt_events.jsonl"
 PDF_FALLBACK_EVENTS_PATH = DATA_DIR / "diagnostics" / "pdf_fallback_events.jsonl"
+TEFAS_START_EVENTS_PATH = DATA_DIR / "diagnostics" / "tefas_start_year_events.jsonl"
 
 DEFAULT_BATCH_SIZE = 60
 DEFAULT_REFRESH_DAYS = 6
 DEFAULT_MAX_FIELD_ATTEMPTS = 3
 DEFAULT_MAX_TECHNICAL_ATTEMPTS = 6
+DEFAULT_TEFAS_START_DELAY_MIN = 15.0
+DEFAULT_TEFAS_START_DELAY_MAX = 20.0
 MIN_EXPECTED_FUNDS = 2000
 MIN_VALID_PAGE_RATIO = 0.98
 MIN_KNOWN_TRADE_RATIO = 0.98
@@ -129,12 +133,40 @@ def needs_technical_retry(result: FundResult | None) -> bool:
     return not is_valid_page(result) or not is_known_trade(result)
 
 
+def needs_tefas_start_retry(result: FundResult | None) -> bool:
+    if not result or not is_valid_page(result) or not is_known_trade(result):
+        return False
+    if not is_missing(result.start_year):
+        return False
+    source = normalize_text(result.start_source).upper()
+    return source in {
+        "TEFAS_START_FALLBACK:WAF_REJECTED",
+        "TEFAS_START_FALLBACK:REQUEST_ERROR",
+        "TEFAS_START_FALLBACK:HTTP_ERROR",
+        "TEFAS_START_FALLBACK:JSON_PARSE_ERROR",
+        "TEFAS_START_FALLBACK:BLOCKED_SKIPPED",
+    }
+
+
+def start_field_can_retry(result: FundResult | None) -> bool:
+    if not result or not is_missing(result.start_year):
+        return False
+    source = normalize_text(result.start_source).upper()
+    if source in {
+        "TEFAS_START_FALLBACK:TRUNCATED",
+        "TEFAS_START_FALLBACK:EMPTY_RESULT",
+        "TEFAS_START_FALLBACK:DATE_PARSE_ERROR",
+    }:
+        return False
+    return not needs_tefas_start_retry(result)
+
+
 def needs_field_retry(result: FundResult | None) -> bool:
     return bool(
         result
         and is_valid_page(result)
         and is_known_trade(result)
-        and (is_missing(result.start_year) or is_missing(result.risk_level))
+        and (start_field_can_retry(result) or is_missing(result.risk_level))
     )
 
 
@@ -143,12 +175,12 @@ def needs_parser_upgrade_retry(
     attempt_count: int,
     max_field_attempts: int,
 ) -> bool:
-    """Eski parser ile eksik kalmış ve limite ulaşmış kaydı v9.4'te bir kez seçer."""
+    """Eski parser ile eksik kalmış kaydı v9.5 motorunda bir kez yeniden seçer."""
     return bool(
         result
         and needs_field_retry(result)
         and SOURCE_ENGINE_VERSION not in normalize_text(result.parse_method)
-        and attempt_count == max_field_attempts
+        and attempt_count >= max_field_attempts
     )
 
 
@@ -186,6 +218,7 @@ def choose_batch(
 ) -> tuple[list[str], dict[str, int]]:
     unattempted: list[str] = []
     technical: list[str] = []
+    tefas_start_retry: list[str] = []
     incomplete: list[str] = []
     parser_upgrade: list[str] = []
     stale: list[str] = []
@@ -197,6 +230,8 @@ def choose_batch(
             unattempted.append(code)
         elif needs_technical_retry(result) and count < max_technical_attempts:
             technical.append(code)
+        elif needs_tefas_start_retry(result) and count < max_technical_attempts:
+            tefas_start_retry.append(code)
         elif needs_field_retry(result) and count < max_field_attempts:
             incomplete.append(code)
         elif needs_parser_upgrade_retry(result, count, max_field_attempts):
@@ -204,11 +239,12 @@ def choose_batch(
         elif is_stale(result, refresh_days):
             stale.append(code)
 
-    ordered = unattempted + technical + incomplete + parser_upgrade + stale
+    ordered = unattempted + technical + tefas_start_retry + incomplete + parser_upgrade + stale
     selected = ordered[: max(1, batch_size)]
     return selected, {
         "unattempted": len(unattempted),
         "technical_retryable": len(technical),
+        "tefas_start_retryable": len(tefas_start_retry),
         "field_retryable": len(incomplete),
         "parser_upgrade_retryable": len(parser_upgrade),
         "stale": len(stale),
@@ -255,6 +291,28 @@ def append_pdf_fallback_event(result: FundResult, attempt_count: int) -> None:
     }
     with PDF_FALLBACK_EVENTS_PATH.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(event, ensure_ascii=False) + "\n")
+
+def append_tefas_start_event(result: FundResult, attempt_count: int) -> None:
+    source = normalize_text(result.start_source)
+    parse_method = normalize_text(result.parse_method)
+    if "TEFAS_START_YEAR_JSON_60M" not in parse_method and not source.startswith("TEFAS_"):
+        return
+    TEFAS_START_EVENTS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    event = {
+        "time": utc_now_iso(),
+        "fund_code": result.fund_code,
+        "attempt_count": attempt_count,
+        "start_date": result.start_date,
+        "start_year": result.start_year,
+        "start_source": result.start_source,
+        "start_confidence": result.start_confidence,
+        "start_evidence": result.start_evidence,
+        "fallback_used": result.fallback_used,
+        "fallback_error": result.fallback_error,
+    }
+    with TEFAS_START_EVENTS_PATH.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(event, ensure_ascii=False) + "\n")
+
 
 def save_progress(
     progress: dict[str, FundResult],
@@ -336,6 +394,7 @@ def diagnostics(
             category = failure_category(result)
             retryable = (
                 (needs_technical_retry(result) and count < max_technical_attempts)
+                or (needs_tefas_start_retry(result) and count < max_technical_attempts)
                 or (needs_field_retry(result) and count < max_field_attempts)
                 or needs_parser_upgrade_retry(result, count, max_field_attempts)
             )
@@ -426,10 +485,11 @@ def publish_if_ready(
             "kap_active_list": "https://www.kap.org.tr/tr/api/fund/criteria/YF/Y",
             "kap_detail": "https://www.kap.org.tr/tr/fon-bilgileri/genel/{permalink}",
             "tefas_traded_list": "https://www.tefas.gov.tr/api/statistics/tefas/getFplFonList",
+            "tefas_start_year": "https://www.tefas.gov.tr/api/funds/fonFiyatBilgiGetir",
         },
         "rules": {
             "fund_name": "KAP aktif YF/Y ana listesindeki resmî fon adı",
-            "start_year": "KAP Genel Bilgiler; eksikse Yatırımcı Bilgi Formu PDF",
+            "start_year": "KAP Genel Bilgiler > KAP Yatırımcı Bilgi Formu PDF > TEFAS 60 ay JSON en eski geçerli tarih; fiyat 0 olabilir; 20 gün sınır koruması",
             "risk_level": "KAP Genel Bilgiler; çoklu riskte en yüksek değer; eksikse PDF yedeği",
             "trade_status": "v9.1 Alım Satım Yerleri + TEFAS işlem listesi doğrulama kuralları",
         },
@@ -477,6 +537,10 @@ def run_batch(args: argparse.Namespace) -> dict[str, Any]:
         routine_request_limit=args.routine_request_limit,
         routine_cooldown_seconds=args.routine_cooldown_seconds,
     )
+    tefas_start_limiter = TefasStartYearRateLimiter(
+        args.tefas_start_delay_min,
+        args.tefas_start_delay_max,
+    )
 
     for index, code in enumerate(selected_codes, start=1):
         fund = funds_by_code[code]
@@ -487,12 +551,14 @@ def run_batch(args: argparse.Namespace) -> dict[str, Any]:
             tefas_error,
             limiter,
             False,
+            tefas_start_limiter,
         )
         attempts[code] = attempts.get(code, 0) + 1
         merged = merge_results(progress.get(code), current)
         progress[code] = merged
         append_attempt_event(current, attempts[code])
         append_pdf_fallback_event(current, attempts[code])
+        append_tefas_start_event(current, attempts[code])
         save_progress(progress, attempts, total_funds=len(all_codes))
         print(
             f"[{index:>3}/{len(selected_codes)}] {code:<6} | "
@@ -576,6 +642,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-technical-attempts", type=int, default=DEFAULT_MAX_TECHNICAL_ATTEMPTS)
     parser.add_argument("--routine-request-limit", type=int, default=65)
     parser.add_argument("--routine-cooldown-seconds", type=int, default=180)
+    parser.add_argument(
+        "--tefas-start-delay-min",
+        type=float,
+        default=float(os.getenv("TEFAS_START_DELAY_MIN", DEFAULT_TEFAS_START_DELAY_MIN)),
+    )
+    parser.add_argument(
+        "--tefas-start-delay-max",
+        type=float,
+        default=float(os.getenv("TEFAS_START_DELAY_MAX", DEFAULT_TEFAS_START_DELAY_MAX)),
+    )
     return parser.parse_args()
 
 
