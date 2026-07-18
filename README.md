@@ -1,6 +1,6 @@
 # Piyasa Nabzı Türkiye — YAT/KAP Merkezi
 
-Bu repository, **KAP aktif YF/Y yatırım fonu evrenini** v9.3 kurallarıyla tarar ve public JSON veri beslemesi üretir.
+Bu repository, **KAP aktif YF/Y yatırım fonu evrenini** v9.4 kurallarıyla tarar ve public JSON veri beslemesi üretir.
 
 ## Yayınlanan ana alanlar
 
@@ -13,7 +13,7 @@ Her fon için:
 
 Geriye dönük uyumluluk için `transaction_status`, `trade_status` ile aynı değeri taşır.
 
-## v9.3 kaynak kuralları
+## v9.4 kaynak kuralları
 
 - Ana evren: KAP `YF/Y` aktif yatırım fonları.
 - Fon adı: KAP ana listesindeki resmî ad.
@@ -25,7 +25,7 @@ Geriye dönük uyumluluk için `transaction_status`, `trade_status` ile aynı de
 - Teknik erişim veya gerçek DOM ayrıştırma problemi: `KONTROL`/teşhis kuyruğu.
 
 
-### v9.3 risk ayrıştırma sırası
+### v9.4 risk ayrıştırma sırası
 
 1. `Yatırım Stratejisi` sütununun sağındaki `Risk Değeri` başlığı bulunur.
 2. `rowspan`/`colspan` hesaba katılarak aynı sütunun alt satırındaki yalnız `1–7` değeri okunur.
@@ -39,7 +39,7 @@ Geriye dönük uyumluluk için `transaction_status`, `trade_status` ile aynı de
 - Workflow 60 fonluk kalıcı batch'ler halinde çalışır.
 - Her batch sonrasında staging ve diagnostics dosyaları GitHub'a commit edilir.
 - Batch'ler arasında varsayılan 180 saniye soğuma vardır.
-- HTTP 429 oluşursa v9.3 motoru 3 → 10 → 20 dakika kademeli bekler ve aynı noktadan devam eder.
+- HTTP 429 oluşursa v9.4 motoru 3 → 10 → 20 dakika kademeli bekler ve aynı noktadan devam eder.
 - Geçici HTTP hatası daha önce doğrulanmış doğru alanların üzerine yazılmaz.
 
 ## Kalıcı dosyalar
