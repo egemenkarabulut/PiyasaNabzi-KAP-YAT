@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """Piyasa Nabzı Türkiye — KAP YF/Y resumable public-data publisher.
 
-The extractor rules are imported from ``kap_yat_source.py`` (v9.3 vertical-column risk).
+The extractor rules are imported from ``kap_yat_source.py`` (v9.4 multi-source risk/start).
 This file adds GitHub-safe batching, persistent checkpoints, diagnostics and
 final publication without replacing previously verified data with temporary
 HTTP failures.
@@ -33,7 +33,7 @@ from kap_yat_source import (
     test_one_fund,
 )
 
-PUBLISHER_VERSION = "github-resumable-v2.3-v9.3"
+PUBLISHER_VERSION = "github-resumable-v2.4-v9.4"
 SCHEMA_VERSION = 2
 
 DATA_DIR = Path("data")
@@ -43,6 +43,7 @@ FAILED_CODES_PATH = DATA_DIR / "staging" / "failed_codes.json"
 REQUEST_FAILURES_PATH = DATA_DIR / "diagnostics" / "request_failures.json"
 RUN_STATE_PATH = DATA_DIR / "run_state.json"
 ATTEMPT_EVENTS_PATH = DATA_DIR / "diagnostics" / "attempt_events.jsonl"
+PDF_FALLBACK_EVENTS_PATH = DATA_DIR / "diagnostics" / "pdf_fallback_events.jsonl"
 
 DEFAULT_BATCH_SIZE = 60
 DEFAULT_REFRESH_DAYS = 6
@@ -137,6 +138,20 @@ def needs_field_retry(result: FundResult | None) -> bool:
     )
 
 
+def needs_parser_upgrade_retry(
+    result: FundResult | None,
+    attempt_count: int,
+    max_field_attempts: int,
+) -> bool:
+    """Eski parser ile eksik kalmış ve limite ulaşmış kaydı v9.4'te bir kez seçer."""
+    return bool(
+        result
+        and needs_field_retry(result)
+        and SOURCE_ENGINE_VERSION not in normalize_text(result.parse_method)
+        and attempt_count == max_field_attempts
+    )
+
+
 def parse_result_time(result: FundResult | None) -> datetime | None:
     if not result:
         return None
@@ -172,6 +187,7 @@ def choose_batch(
     unattempted: list[str] = []
     technical: list[str] = []
     incomplete: list[str] = []
+    parser_upgrade: list[str] = []
     stale: list[str] = []
 
     for code in all_codes:
@@ -183,19 +199,21 @@ def choose_batch(
             technical.append(code)
         elif needs_field_retry(result) and count < max_field_attempts:
             incomplete.append(code)
+        elif needs_parser_upgrade_retry(result, count, max_field_attempts):
+            parser_upgrade.append(code)
         elif is_stale(result, refresh_days):
             stale.append(code)
 
-    ordered = unattempted + technical + incomplete + stale
+    ordered = unattempted + technical + incomplete + parser_upgrade + stale
     selected = ordered[: max(1, batch_size)]
     return selected, {
         "unattempted": len(unattempted),
         "technical_retryable": len(technical),
         "field_retryable": len(incomplete),
+        "parser_upgrade_retryable": len(parser_upgrade),
         "stale": len(stale),
         "pending_total": len(ordered),
     }
-
 
 def append_attempt_event(result: FundResult, attempt_count: int) -> None:
     ATTEMPT_EVENTS_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -214,6 +232,29 @@ def append_attempt_event(result: FundResult, attempt_count: int) -> None:
     with ATTEMPT_EVENTS_PATH.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(event, ensure_ascii=False) + "\n")
 
+
+
+def append_pdf_fallback_event(result: FundResult, attempt_count: int) -> None:
+    if result.fallback_attempted != "EVET":
+        return
+    PDF_FALLBACK_EVENTS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    event = {
+        "time": utc_now_iso(),
+        "fund_code": result.fund_code,
+        "attempt_count": attempt_count,
+        "investor_form_url_found": bool(normalize_text(result.investor_form_url)),
+        "investor_form_url": result.investor_form_url,
+        "pdf_http_status": result.investor_form_http_status,
+        "fallback_used": result.fallback_used,
+        "fallback_winner": result.fallback_winner,
+        "fallback_error": result.fallback_error,
+        "start_year": result.start_year,
+        "start_source": result.start_source,
+        "risk_level": result.risk_level,
+        "risk_source": result.risk_source,
+    }
+    with PDF_FALLBACK_EVENTS_PATH.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(event, ensure_ascii=False) + "\n")
 
 def save_progress(
     progress: dict[str, FundResult],
@@ -296,6 +337,7 @@ def diagnostics(
             retryable = (
                 (needs_technical_retry(result) and count < max_technical_attempts)
                 or (needs_field_retry(result) and count < max_field_attempts)
+                or needs_parser_upgrade_retry(result, count, max_field_attempts)
             )
             row = {
                 "fund_code": code,
@@ -306,8 +348,15 @@ def diagnostics(
                 "http_status": result.http_status,
                 "page_code_verified": result.page_code_verified,
                 "start_year": result.start_year,
+                "start_source": result.start_source,
                 "risk_level": result.risk_level,
+                "risk_source": result.risk_source,
                 "trade_status": result.transaction_status,
+                "fallback_attempted": result.fallback_attempted,
+                "investor_form_url": result.investor_form_url,
+                "investor_form_http_status": result.investor_form_http_status,
+                "fallback_used": result.fallback_used,
+                "fallback_error": result.fallback_error,
                 "detail_url": result.detail_url,
                 "error": result.error,
             }
@@ -443,12 +492,14 @@ def run_batch(args: argparse.Namespace) -> dict[str, Any]:
         merged = merge_results(progress.get(code), current)
         progress[code] = merged
         append_attempt_event(current, attempts[code])
+        append_pdf_fallback_event(current, attempts[code])
         save_progress(progress, attempts, total_funds=len(all_codes))
         print(
             f"[{index:>3}/{len(selected_codes)}] {code:<6} | "
             f"HTTP {current.http_status or '—'} | Başlangıç {merged.start_year} | "
             f"Risk {merged.risk_level} | İşlem {merged.transaction_status} | "
-            f"Kategori {failure_category(current)}",
+            f"PDF {current.fallback_attempted}/{current.investor_form_http_status or '—'} "
+            f"({current.fallback_used}) | Kategori {failure_category(current)}",
             flush=True,
         )
 
