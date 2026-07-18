@@ -330,3 +330,245 @@ def test_div_grid_two_row_layout_reads_risk():
     values, evidence = source._extract_risk_from_div_grid_pairs(soup)
     assert values == [6]
     assert "DIV/GRID" in evidence
+
+import tefas_start_year_source as tefas_start
+
+
+def test_tefas_first_available_date_accepts_zero_price():
+    payload = {
+        "resultList": [
+            {"tarih": "2023-06-23", "fiyat": 0},
+            {"tarih": "2023-06-26", "fiyat": 0},
+        ]
+    }
+    result = tefas_start.evaluate_tefas_start_year_payload(
+        "KCN",
+        payload,
+        today=tefas_start.date(2026, 7, 19),
+    )
+    assert result.status == "ACCEPTED"
+    assert result.start_date == "23.06.2023"
+    assert result.start_year == "2023"
+    assert result.first_available_price == "0"
+    assert result.positive_price_count == 0
+    assert result.source == "TEFAS_FIRST_AVAILABLE_DATE_60M"
+
+
+def test_tefas_lts_uses_earliest_date_not_first_positive_date():
+    payload = {
+        "resultList": [
+            {"tarih": "2023-08-22", "fiyat": 0},
+            {"tarih": "2024-12-19", "fiyat": 0.999957},
+        ]
+    }
+    result = tefas_start.evaluate_tefas_start_year_payload(
+        "LTS",
+        payload,
+        today=tefas_start.date(2026, 7, 19),
+    )
+    assert result.start_date == "22.08.2023"
+    assert result.start_year == "2023"
+    assert result.first_positive_date == "19.12.2024"
+
+
+def test_tefas_boundary_guard_rejects_truncated_60_month_series():
+    payload = {
+        "resultList": [
+            {"tarih": "2021-07-25", "fiyat": 1.0},
+            {"tarih": "2026-07-17", "fiyat": 2.0},
+        ]
+    }
+    result = tefas_start.evaluate_tefas_start_year_payload(
+        "OLD",
+        payload,
+        today=tefas_start.date(2026, 7, 19),
+        tolerance_days=20,
+    )
+    assert result.status == "TRUNCATED"
+    assert result.start_year == "—"
+    assert result.source == "TEFAS_START_FALLBACK:TRUNCATED"
+
+
+def test_old_v94_incomplete_record_at_attempt_four_is_requeued_for_v95():
+    old = make_result(
+        start_year="—",
+        risk_level="5",
+        parse_method="v9.4-multi-source-risk-start-1 | KAP_DETAIL_VISIBLE_HTML + KAP_YBF_PDF",
+    )
+    selected, counts = publisher.choose_batch(
+        ["TST"], {"TST": old}, {"TST": 4},
+        batch_size=60, refresh_days=6,
+        max_field_attempts=3, max_technical_attempts=6,
+    )
+    assert selected == ["TST"]
+    assert counts["parser_upgrade_retryable"] == 1
+
+
+def test_v95_truncated_tefas_start_is_not_repeated_as_field_retry():
+    current = make_result(
+        start_year="—",
+        risk_level="5",
+        start_source="TEFAS_START_FALLBACK:TRUNCATED",
+        parse_method=f"{source.SCRIPT_VERSION} | TEFAS_START_YEAR_JSON_60M",
+    )
+    selected, counts = publisher.choose_batch(
+        ["TST"], {"TST": current}, {"TST": 5},
+        batch_size=60, refresh_days=6,
+        max_field_attempts=3, max_technical_attempts=6,
+    )
+    assert selected == []
+    assert counts["tefas_start_retryable"] == 0
+    assert counts["field_retryable"] == 0
+
+
+def test_v95_waf_tefas_start_is_retryable_until_technical_limit():
+    current = make_result(
+        start_year="—",
+        risk_level="5",
+        start_source="TEFAS_START_FALLBACK:WAF_REJECTED",
+        parse_method=f"{source.SCRIPT_VERSION} | TEFAS_START_YEAR_JSON_60M",
+    )
+    selected, counts = publisher.choose_batch(
+        ["TST"], {"TST": current}, {"TST": 5},
+        batch_size=60, refresh_days=6,
+        max_field_attempts=3, max_technical_attempts=6,
+    )
+    assert selected == ["TST"]
+    assert counts["tefas_start_retryable"] == 1
+
+
+def test_test_one_fund_uses_tefas_only_after_kap_and_pdf_start_are_missing(monkeypatch):
+    detail_html = """
+    <html><body>
+      <h1>TST TEST FONU</h1>
+      <table>
+        <tr><th>Yatırım Stratejisi</th><th>Risk Değeri</th></tr>
+        <tr><td>Strateji metni</td><td>5</td></tr>
+      </table>
+      <table>
+        <tr><th>Alım Satım Saatleri</th><th>Alım Satım Yerleri</th></tr>
+        <tr><td>09:00</td><td>TEFAS</td></tr>
+      </table>
+    </body></html>
+    """
+    summary_html = "<html><body>Yatırımcı Bilgi Formu bağlantısı yok.</body></html>"
+
+    class FakeResponse:
+        def __init__(self, text, url):
+            self.text = text
+            self.url = url
+            self.status_code = 200
+            self.content = text.encode("utf-8")
+            self.headers = {"Content-Type": "text/html; charset=utf-8"}
+            self.encoding = "utf-8"
+            self.apparent_encoding = "utf-8"
+
+    responses = iter([
+        (FakeResponse(detail_html, "https://example.test/detail"), 10),
+        (FakeResponse(summary_html, "https://example.test/summary"), 8),
+    ])
+    monkeypatch.setattr(source, "request_with_retry", lambda *args, **kwargs: next(responses))
+    monkeypatch.setattr(source, "thread_session", lambda: object())
+
+    tefas_result = tefas_start.evaluate_tefas_start_year_payload(
+        "TST",
+        {"resultList": [{"tarih": "2023-06-23", "fiyat": 0}]},
+        today=tefas_start.date(2026, 7, 19),
+    )
+    monkeypatch.setattr(source, "fetch_tefas_start_year", lambda *args, **kwargs: tefas_result)
+
+    fund = source.FundEntry("TST", "TEST FONU", "1", "test-fonu", "ACTIVE", "YF")
+    result = source.test_one_fund(
+        fund,
+        {},
+        {"TST": {"durum": "AÇIK", "unvan": "TEST FONU", "tarih": "2026-07-19"}},
+        "",
+        source.GlobalRateLimiter(0),
+        False,
+        tefas_start.TefasStartYearRateLimiter(0, 0),
+    )
+
+    assert result.start_year == "2023"
+    assert result.start_date == "23.06.2023"
+    assert result.start_source == "TEFAS_FIRST_AVAILABLE_DATE_60M"
+    assert "BAŞLANGIÇ-TEFAS-JSON" in result.fallback_used
+    assert "TEFAS_START_YEAR_JSON_60M" in result.parse_method
+
+
+def test_existing_kap_start_date_is_never_overwritten_by_tefas(monkeypatch):
+    detail_html = """
+    <html><body>
+      <h1>TST TEST FONU</h1>
+      <table><tr><th>Fonun Halka Arz Tarihi</th><td>23.06.2020</td></tr></table>
+      <table>
+        <tr><th>Yatırım Stratejisi</th><th>Risk Değeri</th></tr>
+        <tr><td>Strateji metni</td><td>5</td></tr>
+      </table>
+      <table>
+        <tr><th>Alım Satım Saatleri</th><th>Alım Satım Yerleri</th></tr>
+        <tr><td>09:00</td><td>TEFAS</td></tr>
+      </table>
+    </body></html>
+    """
+
+    class FakeResponse:
+        text = detail_html
+        url = "https://example.test/detail"
+        status_code = 200
+        content = detail_html.encode("utf-8")
+        headers = {"Content-Type": "text/html; charset=utf-8"}
+        encoding = "utf-8"
+        apparent_encoding = "utf-8"
+
+    monkeypatch.setattr(source, "request_with_retry", lambda *args, **kwargs: (FakeResponse(), 10))
+    monkeypatch.setattr(source, "thread_session", lambda: object())
+
+    def forbidden_tefas_call(*args, **kwargs):
+        raise AssertionError("KAP tarihi varken TEFAS çağrılmamalı")
+
+    monkeypatch.setattr(source, "fetch_tefas_start_year", forbidden_tefas_call)
+    fund = source.FundEntry("TST", "TEST FONU", "1", "test-fonu", "ACTIVE", "YF")
+    result = source.test_one_fund(
+        fund,
+        {},
+        {"TST": {"durum": "AÇIK"}},
+        "",
+        source.GlobalRateLimiter(0),
+        False,
+        tefas_start.TefasStartYearRateLimiter(0, 0),
+    )
+    assert result.start_year == "2020"
+    assert result.start_source.startswith("KAP_DETAIL_HTML")
+    assert "TEFAS_START_YEAR_JSON_60M" not in result.parse_method
+
+
+def test_merge_keeps_existing_kap_start_over_new_tefas_start():
+    previous = make_result(
+        start_date="23/06/2020",
+        start_year="2020",
+        start_source="KAP_DETAIL_HTML:Fonun Halka Arz Tarihi",
+    )
+    current = make_result(
+        start_date="23.06.2023",
+        start_year="2023",
+        start_source="TEFAS_FIRST_AVAILABLE_DATE_60M",
+    )
+    merged = source.merge_results(previous, current)
+    assert merged.start_year == "2020"
+    assert merged.start_source.startswith("KAP_DETAIL_HTML")
+
+
+def test_merge_allows_kap_start_to_upgrade_previous_tefas_start():
+    previous = make_result(
+        start_date="23.06.2023",
+        start_year="2023",
+        start_source="TEFAS_FIRST_AVAILABLE_DATE_60M",
+    )
+    current = make_result(
+        start_date="23/06/2020",
+        start_year="2020",
+        start_source="KAP_YBF_PDF:İhraç tarihi",
+    )
+    merged = source.merge_results(previous, current)
+    assert merged.start_year == "2020"
+    assert merged.start_source.startswith("KAP_YBF_PDF")
