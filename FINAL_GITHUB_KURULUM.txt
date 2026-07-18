@@ -1,7 +1,7 @@
-PIYASA NABZI YAT/KAP — v2.3 / v9.3 FINAL
+PIYASA NABZI YAT/KAP — v2.4 / v9.4 FINAL
 ========================================
 
-Bu paket v2.0 GitHub resumable motoru, v9.3 dikey kolon risk ayrıştırıcısı ve Windows yerel başlatıcıyı tek klasörde birleştirir.
+Bu paket v2.0 GitHub resumable motoru, v9.4 dikey kolon risk ayrıştırıcısı ve Windows yerel başlatıcıyı tek klasörde birleştirir.
 
 GitHub'a yükledikten sonra:
 1) Settings > Actions > General > Workflow permissions > Read and write permissions
