@@ -151,7 +151,7 @@ def test_bpz_risk_is_read_from_matching_table_column():
     soup = source.clean_soup(html)
     result = source.extract_risk(soup, source.visible_lines(soup))
     assert result.value == "2"
-    assert "TABLO/KOLON" in result.source_label
+    assert "YATAY+DİKEY YAPISAL" in result.source_label
 
 
 def test_bpz_flattened_segment_fallback_reads_trailing_risk():
@@ -167,7 +167,7 @@ def test_bpz_flattened_segment_fallback_reads_trailing_risk():
     soup = source.clean_soup(html)
     result = source.extract_risk(soup, source.visible_lines(soup))
     assert result.value == "2"
-    assert "BÖLÜM SEGMENTİ" in result.source_label
+    assert "GENİŞ BÖLÜM" in result.source_label
 
 
 def test_segment_fallback_does_not_mistake_t_plus_two_for_risk():
@@ -213,7 +213,7 @@ def test_alc_visual_column_with_colspan_is_read_vertically():
     soup = source.clean_soup(html)
     result = source.extract_risk(soup, source.visible_lines(soup))
     assert result.value == "6"
-    assert result.matched_scope == "TABLO_KOLON"
+    assert result.matched_scope == "YAPISAL_YATAY_DIKEY"
     assert "GÖRSEL SÜTUN" in result.evidence
 
 
@@ -227,7 +227,7 @@ def test_anl_visual_column_with_rowspan_is_read_vertically():
     soup = source.clean_soup(html)
     result = source.extract_risk(soup, source.visible_lines(soup))
     assert result.value == "1"
-    assert result.matched_scope == "TABLO_KOLON"
+    assert result.matched_scope == "YAPISAL_YATAY_DIKEY"
 
 
 def test_vertical_column_accepts_only_a_single_digit_1_to_7():
@@ -242,3 +242,91 @@ def test_vertical_column_accepts_only_a_single_digit_1_to_7():
         soup = source.clean_soup(html)
         result = source.extract_risk(soup, source.visible_lines(soup))
         assert result.value == "—", (invalid, result.value, result.evidence)
+
+
+def test_alc_live_flattened_visible_layout_reads_trailing_six():
+    html = """
+    <html><body>
+      <div>Fonun Yatırım Stratejisi ve Risk Değeri</div>
+      <div>Yatırım Stratejisi Risk Değeri</div>
+      <div>Yatırım stratejisinin; Fon toplam değerinin %80'i devamlı olarak BIST Temettü Endeksi'ne dahil yerli ihraççı paylarına yatırılacaktır.</div>
+      <div>Fon'un hisse senedi yoğun fon olması nedeniyle Fon portföy değerinin en az %80'i devamlı olarak menkul kıymetlere yatırılır.</div>
+      <div>Fon portföyüne yalnızca Türk Lirası cinsinden varlıklar ve işlemler dahil edilecektir.</div>
+      <div>Fon'un portföyüne yabancı para birimi cinsinden varlık ve altın ile diğer kıymetli madenler dahil edilmeyecektir 6</div>
+      <div>Fon Karşılaştırma Ölçütü</div>
+    </body></html>
+    """
+    soup = source.clean_soup(html)
+    result = source.extract_risk(soup, source.visible_lines(soup))
+    assert result.value == "6"
+    assert "GENİŞ BÖLÜM" in result.source_label
+    assert result.confidence == "ÇOK YÜKSEK"
+
+
+def test_currency_and_share_group_proximity_are_not_risk_candidates():
+    samples = [
+        "TL 6",
+        "6 USD",
+        "EUR yakınında 5",
+        "A Grubu 4",
+        "7 B Grubu",
+        "pay grubu 3",
+    ]
+    for sample in samples:
+        values, detail = source._risk_values_from_text(sample)
+        assert values == [], (sample, values, detail)
+
+
+def test_pdf_issue_date_accepts_space_after_colon():
+    result = source.extract_start_from_investor_form("İhraç Tarihi: 06/11/2006")
+    assert result.value == "2006"
+    assert result.raw_value == "06/11/2006"
+    assert "İhraç tarihi" in result.source_label
+
+
+def test_pdf_issue_date_accepts_no_space_after_colon():
+    result = source.extract_start_from_investor_form("İhraç Tarihi:06/11/2006")
+    assert result.value == "2006"
+    assert result.raw_value == "06/11/2006"
+
+
+def test_parser_upgrade_requeues_old_incomplete_at_attempt_limit_once():
+    old = make_result(
+        risk_level="—",
+        parse_method="v9.3-vertical-column-risk-1 | KAP_DETAIL_VISIBLE_HTML",
+    )
+    selected, counts = publisher.choose_batch(
+        ["TST"], {"TST": old}, {"TST": 3},
+        batch_size=60, refresh_days=6,
+        max_field_attempts=3, max_technical_attempts=6,
+    )
+    assert selected == ["TST"]
+    assert counts["parser_upgrade_retryable"] == 1
+
+    new = make_result(
+        risk_level="—",
+        parse_method=f"{source.SCRIPT_VERSION} | KAP_DETAIL_VISIBLE_HTML",
+    )
+    selected, counts = publisher.choose_batch(
+        ["TST"], {"TST": new}, {"TST": 4},
+        batch_size=60, refresh_days=6,
+        max_field_attempts=3, max_technical_attempts=6,
+    )
+    assert selected == []
+    assert counts["parser_upgrade_retryable"] == 0
+
+
+def test_div_grid_two_row_layout_reads_risk():
+    html = """
+    <html><body>
+      <section>
+        <div><span>Yatırım Stratejisi</span><span>Risk Değeri</span></div>
+        <div><span>Uzun yatırım stratejisi metni</span><span>6</span></div>
+      </section>
+      <div>Fon Karşılaştırma Ölçütü</div>
+    </body></html>
+    """
+    soup = source.clean_soup(html)
+    values, evidence = source._extract_risk_from_div_grid_pairs(soup)
+    assert values == [6]
+    assert "DIV/GRID" in evidence
