@@ -2,22 +2,13 @@
   "schema_version": 2,
   "publisher_version": "github-resumable-v2.5-v9.5",
   "source_engine_version": "v9.5-kap-pdf-tefas-start-fallback-1",
-  "updated_at": "2026-07-18T23:20:45+00:00",
-  "status": "IN_PROGRESS",
-  "batch_processed": 42,
+  "updated_at": "2026-07-18T23:23:54+00:00",
+  "status": "PUBLISHED",
+  "batch_processed": 1,
   "batch_size": 60,
   "saved_result_count": 2138,
   "total_kap_yf_count": 2134,
   "queue_before": {
-    "unattempted": 0,
-    "technical_retryable": 0,
-    "tefas_start_retryable": 0,
-    "field_retryable": 0,
-    "parser_upgrade_retryable": 42,
-    "stale": 0,
-    "pending_total": 42
-  },
-  "queue_after": {
     "unattempted": 0,
     "technical_retryable": 0,
     "tefas_start_retryable": 1,
@@ -25,6 +16,15 @@
     "parser_upgrade_retryable": 0,
     "stale": 0,
     "pending_total": 1
+  },
+  "queue_after": {
+    "unattempted": 0,
+    "technical_retryable": 0,
+    "tefas_start_retryable": 0,
+    "field_retryable": 0,
+    "parser_upgrade_retryable": 0,
+    "stale": 0,
+    "pending_total": 0
   },
   "quality_metrics": {
     "total_kap_yf_count": 2134,
@@ -35,8 +35,8 @@
     "known_trade_count": 2134,
     "known_trade_ratio": 1.0,
     "tefas_traded_count": 1023,
-    "pending_total": 1
+    "pending_total": 0
   },
-  "official_file_updated": false,
-  "next_action": "Run the workflow again; only pending, failed, incomplete or stale records will be selected."
+  "official_file_updated": true,
+  "next_action": "Official JSON published."
 }

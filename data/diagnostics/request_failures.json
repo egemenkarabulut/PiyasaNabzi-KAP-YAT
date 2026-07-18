@@ -1,10 +1,10 @@
 {
   "schema_version": 2,
-  "updated_at": "2026-07-18T23:20:45+00:00",
-  "count": 107,
+  "updated_at": "2026-07-18T23:23:53+00:00",
+  "count": 106,
   "category_counts": {
     "MISSING_RISK": 92,
-    "MISSING_START": 10,
+    "MISSING_START": 9,
     "MISSING_START_AND_RISK": 5
   },
   "failures": [
@@ -1770,27 +1770,6 @@
       "fallback_used": "—",
       "fallback_error": "KAP Özet sayfasında Yatırımcı Bilgi Formu bağlantısı bulunamadı.",
       "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/ran-is-portfoy-rana-serbest-doviz-ozel-fon",
-      "error": ""
-    },
-    {
-      "fund_code": "RE6",
-      "fund_name": "RE-PIE PORTFÖY ALTINCI HİSSE SENEDİ SERBEST (TL) FON (HİSSE SENEDİ YOĞUN FON)",
-      "category": "MISSING_START",
-      "attempt_count": 4,
-      "retryable": true,
-      "http_status": 200,
-      "page_code_verified": "EVET",
-      "start_year": "—",
-      "start_source": "TEFAS_START_FALLBACK:REQUEST_ERROR",
-      "risk_level": "7",
-      "risk_source": "KAP_DETAIL_HTML:Risk Değeri [YATAY+DİKEY YAPISAL]",
-      "trade_status": "KAPALI",
-      "fallback_attempted": "EVET",
-      "investor_form_url": "",
-      "investor_form_http_status": null,
-      "fallback_used": "—",
-      "fallback_error": "KAP Özet sayfasında Yatırımcı Bilgi Formu bağlantısı bulunamadı. | TEFAS_START_REQUEST_ERROR: ReadTimeout: HTTPSConnectionPool(host='www.tefas.gov.tr', port=443): Read timed out. (read timeout=45)",
-      "detail_url": "https://www.kap.org.tr/tr/fon-bilgileri/genel/re6-re-pie-portfoy-altinci-hisse-senedi-serbest-tl-fon-hisse-senedi-yogun-fon",
       "error": ""
     },
     {
