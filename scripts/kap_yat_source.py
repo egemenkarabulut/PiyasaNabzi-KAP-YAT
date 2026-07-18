@@ -103,7 +103,7 @@ BLOCK_COOLDOWN_SECONDS = 600
 REQUEST_TIMEOUT_SECONDS = 50
 MAX_RETRIES = 4
 DEFAULT_RETRY_ROUNDS = 3
-SCRIPT_VERSION = "v9.3-vertical-column-risk-1"
+SCRIPT_VERSION = "v9.4-multi-source-risk-start-1"
 
 HEADERS_JSON = {
     "User-Agent": (
@@ -1022,14 +1022,18 @@ def extract_start(soup: BeautifulSoup, lines: Sequence[str]) -> ParseValue:
 
 
 def _risk_values_from_text(value: str) -> tuple[list[int], str]:
+    """Açık risk etiketi veya tek başına risk rakamını çıkarır.
+
+    TL/USD/EUR ve A/B/C/D/pay grubu yakınlığındaki rakamlar bilinçli olarak
+    risk adayı yapılmaz. Bu bağlamlar strateji metnindeki sıradan sayıları yanlış
+    pozitif üretebildiği için v9.4'te tamamen kaldırılmıştır.
+    """
     compact = compact_for_match(value)
     values: list[int] = []
     details: list[str] = []
 
     contextual_patterns = (
-        r"(?:usd|eur|gbp|chf|tl|try|a grubu|b grubu|c grubu|d grubu|pay grubu).{0,45}\b([1-7])\b",
-        r"\b([1-7])\b.{0,35}(?:usd|eur|gbp|chf|tl|try|a grubu|b grubu|c grubu|d grubu|pay grubu)",
-        r"(?:risk degeri|risk seviyesi|risk gostergesi|risk sinifi|risk grubu)\s*[:=-]?\s*([1-7])(?:\s*/\s*7)?\b",
+        r"(?:risk degeri|risk seviyesi|risk gostergesi|risk sinifi|risk grubu)\s*[:：=\-]?\s*([1-7])(?:\s*/\s*7)?(?:\b|$)",
         r"\b([1-7])\s*/\s*7\b",
     )
     for pattern in contextual_patterns:
@@ -1038,7 +1042,6 @@ def _risk_values_from_text(value: str) -> tuple[list[int], str]:
             values.append(number)
             details.append(match.group(0))
 
-    # Hücre yalnızca bir risk rakamıysa en güvenilir sade biçim.
     clean = normalize_text(value)
     if re.fullmatch(r"[1-7]", clean):
         values.append(int(clean))
@@ -1046,7 +1049,6 @@ def _risk_values_from_text(value: str) -> tuple[list[int], str]:
 
     unique = sorted(set(values))
     return unique, " | ".join(dict.fromkeys(details))
-
 
 def _risk_values_from_structural_cell(value: str) -> tuple[list[int], str]:
     """Risk kolonuna denk gelen hücredeki 1-7 değerlerini güvenli biçimde çıkarır.
@@ -1177,14 +1179,7 @@ def _single_risk_digit(value: str) -> list[int]:
 
 
 def _extract_risk_from_table_columns(soup: BeautifulSoup) -> tuple[list[int], str]:
-    """Risk Değeri başlığıyla aynı görsel sütunun bir altındaki rakamı okur.
-
-    Öncelik gerçek dikey koordinattadır:
-    ``Yatırım Stratejisi`` solda, ``Risk Değeri`` sağda ayrı başlık hücreleri
-    olmalıdır. Sonraki veri satırında yatırım stratejisi metni sol sütunda,
-    yalnızca ``1``-``7`` rakamı ise Risk Değeri sütununda bulunmalıdır.
-    Colspan/rowspan ve iç içe tablo yapıları gerçek görsel ızgaraya çevrilir.
-    """
+    """Risk başlığının yalnızca bir görsel satır altındaki aynı sütunu okur."""
     collected: list[int] = []
     evidence_parts: list[str] = []
 
@@ -1194,19 +1189,26 @@ def _extract_risk_from_table_columns(soup: BeautifulSoup) -> tuple[list[int], st
             continue
 
         for header_index, header_row in enumerate(grid):
+            data_index = header_index + 1
+            if data_index >= len(grid):
+                continue
+
             strategy_indexes = [
-                index for index, (text, _cell) in enumerate(header_row)
-                if _is_strategy_header(text)
+                index for index, (cell_text, _cell) in enumerate(header_row)
+                if _is_strategy_header(cell_text)
             ]
             risk_indexes = [
-                index for index, (text, _cell) in enumerate(header_row)
-                if _is_exact_risk_header(text)
+                index for index, (cell_text, _cell) in enumerate(header_row)
+                if _is_exact_risk_header(cell_text)
             ]
             if not strategy_indexes or not risk_indexes:
                 continue
 
-            # Aynı colspan hücresi gridde birden çok sütunda tekrar edebilir.
-            # Başlıkların gerçekten ayrı DOM hücreleri olmasını şart koşuyoruz.
+            data_row = grid[data_index]
+            joined = " | ".join(cell_text for cell_text, _cell in data_row if normalize_text(cell_text))
+            if joined and contains_any(joined, RISK_END_LABELS):
+                continue
+
             for risk_index in risk_indexes:
                 risk_header_cell = header_row[risk_index][1]
                 left_strategy_indexes = [
@@ -1217,77 +1219,187 @@ def _extract_risk_from_table_columns(soup: BeautifulSoup) -> tuple[list[int], st
                     continue
                 strategy_index = max(left_strategy_indexes)
                 strategy_header_cell = header_row[strategy_index][1]
+                if risk_index >= len(data_row) or strategy_index >= len(data_row):
+                    continue
 
-                for row_index in range(header_index + 1, min(len(grid), header_index + 12)):
-                    row = grid[row_index]
-                    joined = " | ".join(
-                        text for text, _cell in row if normalize_text(text)
-                    )
-                    if joined and contains_any(joined, RISK_END_LABELS):
-                        break
-                    if any(_is_exact_risk_header(text) for text, _cell in row):
-                        continue
-                    if risk_index >= len(row) or strategy_index >= len(row):
-                        continue
+                strategy_text, strategy_cell = data_row[strategy_index]
+                risk_text, risk_cell = data_row[risk_index]
+                if risk_cell is None or risk_cell is risk_header_cell:
+                    continue
+                if strategy_cell is None or strategy_cell is strategy_header_cell:
+                    continue
+                if risk_cell is strategy_cell:
+                    continue
+                if not normalize_text(strategy_text):
+                    continue
 
-                    strategy_text, strategy_cell = row[strategy_index]
-                    risk_text, risk_cell = row[risk_index]
+                values = _single_risk_digit(risk_text)
+                if not values:
+                    continue
 
-                    # Dikey eşleşmenin güvenlik koşulları:
-                    # - risk hücresi başlıktan farklı ve strateji hücresinden ayrı,
-                    # - sol tarafta gerçek strateji metni var,
-                    # - sağ tarafta yalnızca tek 1-7 rakamı var.
-                    if risk_cell is None or risk_cell is risk_header_cell:
-                        continue
-                    if strategy_cell is None or strategy_cell is strategy_header_cell:
-                        continue
-                    if risk_cell is strategy_cell:
-                        continue
-                    if not normalize_text(strategy_text):
-                        continue
-
-                    values = _single_risk_digit(risk_text)
-                    if not values:
-                        continue
-
-                    collected.extend(values)
-                    evidence_parts.append(
-                        f"TABLO {table_number} | GÖRSEL SÜTUN {risk_index + 1} | "
-                        f"BAŞLIKLAR: {normalize_text(strategy_header_cell.get_text(' ', strip=True))} | "
-                        f"{normalize_text(risk_header_cell.get_text(' ', strip=True))} | "
-                        f"SOL METİN: {truncate(strategy_text, 700)} | RİSK HÜCRESİ: {risk_text}"
-                    )
-                    break
+                collected.extend(values)
+                evidence_parts.append(
+                    f"TABLO {table_number} | DİKEY GÖRSEL SÜTUN {risk_index + 1} | "
+                    f"BAŞLIK SATIRI: {normalize_text(strategy_header_cell.get_text(' ', strip=True))} | "
+                    f"{normalize_text(risk_header_cell.get_text(' ', strip=True))} | "
+                    f"HEMEN ALT SATIR SOL METİN: {truncate(strategy_text, 700)} | "
+                    f"HEMEN ALT SATIR RİSK HÜCRESİ: {risk_text}"
+                )
 
     return sorted(set(collected)), " || ".join(dict.fromkeys(evidence_parts))
 
-def _extract_risk_from_section_segment(lines: Sequence[str]) -> tuple[list[int], str]:
-    """Risk bölümünün son veri segmentindeki değeri yedek olarak çıkarır.
 
-    KAP bazı sayfalarda iki kolonlu satırı görünür metinde tek satıra düzleştirir;
-    BPZ örneğinde son strateji cümlesinin ardından risk değeri ``.2`` biçiminde
-    görünür. Yalnızca açık risk bölümünde ve bir sonraki bölüm başlamadan hemen
-    önceki son satır kullanıldığı için genel sayfa rakamlarıyla karışmaz.
+def _extract_risk_from_horizontal_row_pair(soup: BeautifulSoup) -> tuple[list[int], str]:
+    """Başlık satırı ve hemen altındaki veri satırını yatay DOM sırasıyla doğrular.
+
+    Bu kontrol görsel sütun ızgarasından bağımsız olarak doğrudan iki komşu
+    ``tr`` satırındaki ayrı hücre sırasını inceler. ALC biçiminde başlıklar
+    ``Yatırım Stratejisi | Risk Değeri`` ve alt satır ``uzun metin | 6`` olur.
     """
+    values: list[int] = []
+    evidence: list[str] = []
+    for table_number, table in enumerate(soup.find_all("table"), start=1):
+        rows = _direct_table_rows(table)
+        for row_index in range(len(rows) - 1):
+            header_cells = _direct_row_cells(rows[row_index])
+            data_cells = _direct_row_cells(rows[row_index + 1])
+            if len(header_cells) < 2 or len(data_cells) < 2:
+                continue
+            header_texts = [normalize_text(cell.get_text(" ", strip=True)) for cell in header_cells]
+            strategy_positions = [i for i, cell_text in enumerate(header_texts) if _is_strategy_header(cell_text)]
+            risk_positions = [i for i, cell_text in enumerate(header_texts) if _is_exact_risk_header(cell_text)]
+            if not strategy_positions or not risk_positions:
+                continue
+            strategy_pos = strategy_positions[-1]
+            risk_pos = risk_positions[0]
+            if strategy_pos >= risk_pos:
+                continue
+
+            # KAP'ın ALC yapısında başlık ve veri satırları iki ayrı hücreden oluşur.
+            # Colspan değerleri hücre sayısını değiştirmez; DOM sırası soldan sağadır.
+            strategy_data = normalize_text(data_cells[0].get_text(" ", strip=True))
+            risk_data = normalize_text(data_cells[-1].get_text(" ", strip=True))
+            if not strategy_data or data_cells[0] is data_cells[-1]:
+                continue
+            found = _single_risk_digit(risk_data)
+            if not found:
+                continue
+            values.extend(found)
+            evidence.append(
+                f"TABLO {table_number} | YATAY İKİ SATIR | "
+                f"BAŞLIKLAR: {' | '.join(header_texts)} | "
+                f"ALT SATIR: {truncate(strategy_data, 700)} | {risk_data}"
+            )
+    return sorted(set(values)), " || ".join(dict.fromkeys(evidence))
+
+
+def _direct_block_children(tag: Tag) -> list[Tag]:
+    return [child for child in tag.find_all(recursive=False) if isinstance(child, Tag)]
+
+
+def _extract_risk_from_div_grid_pairs(soup: BeautifulSoup) -> tuple[list[int], str]:
+    """Table yerine div/grid/flex kullanılan iki satırlı KAP bloklarını çözer."""
+    values: list[int] = []
+    evidence: list[str] = []
+    for parent in soup.find_all(["div", "section", "article"]):
+        header_children = _direct_block_children(parent)
+        if len(header_children) < 2 or len(header_children) > 12:
+            continue
+        header_texts = [normalize_text(child.get_text(" ", strip=True)) for child in header_children]
+        strategy_positions = [i for i, cell_text in enumerate(header_texts) if _is_strategy_header(cell_text)]
+        risk_positions = [i for i, cell_text in enumerate(header_texts) if _is_exact_risk_header(cell_text)]
+        if not strategy_positions or not risk_positions:
+            continue
+        strategy_pos = strategy_positions[-1]
+        risk_pos = risk_positions[0]
+        if strategy_pos >= risk_pos:
+            continue
+
+        sibling = parent.find_next_sibling()
+        while sibling is not None and not isinstance(sibling, Tag):
+            sibling = sibling.find_next_sibling()
+        if sibling is None:
+            continue
+        data_children = _direct_block_children(sibling)
+        if len(data_children) <= risk_pos or len(data_children) <= strategy_pos:
+            continue
+        strategy_data = normalize_text(data_children[strategy_pos].get_text(" ", strip=True))
+        risk_data = normalize_text(data_children[risk_pos].get_text(" ", strip=True))
+        if not strategy_data:
+            continue
+        found = _single_risk_digit(risk_data)
+        if not found:
+            continue
+        values.extend(found)
+        evidence.append(
+            f"DIV/GRID YATAY+DİKEY | BAŞLIKLAR: {' | '.join(header_texts)} | "
+            f"HEMEN ALT BLOK: {truncate(strategy_data, 700)} | {risk_data}"
+        )
+    return sorted(set(values)), " || ".join(dict.fromkeys(evidence))
+
+
+def _risk_section(lines: Sequence[str]) -> list[str]:
     start_index = -1
     for index, line in enumerate(lines):
         if contains_any(line, RISK_SECTION_LABELS):
             start_index = index
             break
     if start_index < 0:
-        return [], ""
-
+        return []
     section: list[str] = []
-    for line in lines[start_index:start_index + 120]:
+    for line in lines[start_index:start_index + 180]:
         if section and contains_any(line, RISK_END_LABELS):
             break
-        section.append(normalize_text(line))
+        normalized = normalize_text(line)
+        if normalized:
+            section.append(normalized)
+    return section
 
-    if not section or not any(contains_any(line, RISK_LABELS) for line in section[:8]):
+
+def _extract_risk_from_wide_section(lines: Sequence[str]) -> tuple[list[int], str]:
+    """Sınırlandırılmış geniş risk bölümündeki adayları toplar.
+
+    Strateji içindeki rastgele 1-7 değerleri taranmaz. Yalnız açık risk etiketi,
+    tek başına risk düğümü ve ALC'deki gibi bölümün sonunda metne birleşmiş tek
+    bağımsız 1-7 değeri değerlendirilir.
+    """
+    section = _risk_section(lines)
+    if not section:
+        return [], ""
+    if not any(_is_strategy_header(line) or "yatırım stratejisi" in normalize_text(line).casefold() for line in section[:12]):
+        return [], ""
+    if not any(contains_any(line, RISK_LABELS) for line in section[:12]):
         return [], ""
 
-    # Başlık satırından sonraki son görünür içerik satırı, KAP'ın iki kolonlu
-    # satırındaki risk hücresinin DOM sırasındaki son parçasıdır.
+    joined = " | ".join(section)
+    found, detail = _risk_values_from_text(joined)
+    evidence: list[str] = []
+    if detail:
+        evidence.append(f"GENİŞ BÖLÜM AÇIK ETİKET: {detail}")
+
+    # ALC canlı sayfası: son strateji metni DOM'da risk hücresindeki 6 ile
+    # ``... dahil edilmeyecektir 6`` biçiminde düzleşebilir.
+    tail = normalize_text(section[-1])
+    match = re.search(r"([1-7])\s*$", tail)
+    if match:
+        digit_start = match.start(1)
+        prefix = tail[:digit_start]
+        previous = prefix[-1:] if prefix else ""
+        decimal_or_multidigit = bool(re.search(r"\d[.,]\s*$", prefix)) or bool(previous.isdigit())
+        disallowed_marker = previous in {"%", "/", "+", "-", "−"}
+        if len(prefix.strip()) >= 40 and not decimal_or_multidigit and not disallowed_marker:
+            found.append(int(match.group(1)))
+            evidence.append(f"GENİŞ BÖLÜM SON BAĞIMSIZ RİSK: {truncate(tail, 1200)}")
+
+    return sorted(set(value for value in found if 1 <= value <= 7)), " || ".join(evidence)
+
+
+def _extract_risk_from_section_segment(lines: Sequence[str]) -> tuple[list[int], str]:
+    """Risk bölümünün son veri segmentindeki değeri ayrı yedek yöntemle çıkarır."""
+    section = _risk_section(lines)
+    if not section or not any(contains_any(line, RISK_LABELS) for line in section[:12]):
+        return [], ""
+
     header_position = 0
     for index, line in enumerate(section):
         if contains_any(line, RISK_LABELS):
@@ -1301,8 +1413,6 @@ def _extract_risk_from_section_segment(lines: Sequence[str]) -> tuple[list[int],
     if re.fullmatch(r"[1-7]", tail):
         return [int(tail)], f"RİSK BÖLÜMÜ SON HÜCRE: {tail}"
 
-    # Uzun metne bitişik tek rakam: "... edilmeyecektir.2". Çok basamaklı
-    # sayılar, yüzdeler, kesirler, T+2 ve ondalık sayılar özellikle dışlanır.
     match = re.search(r"([1-7])\s*$", tail)
     if match:
         digit_start = match.start(1)
@@ -1310,102 +1420,123 @@ def _extract_risk_from_section_segment(lines: Sequence[str]) -> tuple[list[int],
         previous = prefix[-1:] if prefix else ""
         decimal_or_multidigit = bool(re.search(r"\d[.,]\s*$", prefix)) or bool(previous.isdigit())
         disallowed_marker = previous in {"%", "/", "+", "-", "−"}
-        if not decimal_or_multidigit and not disallowed_marker:
+        if len(prefix.strip()) >= 40 and not decimal_or_multidigit and not disallowed_marker:
             value = int(match.group(1))
-            return [value], f"RİSK BÖLÜMÜ SON SEGMENT: {truncate(tail, 1000)}"
-
+            return [value], f"RİSK BÖLÜMÜ SON SEGMENT: {truncate(tail, 1200)}"
     return [], ""
 
-
 def extract_risk(soup: BeautifulSoup, lines: Sequence[str]) -> ParseValue:
-    """Risk değerini yapısal kolon + mevcut metin + segment çaprazıyla çıkarır."""
+    """A-E bağımsız HTML yöntemlerini çalıştırıp risk adaylarını çapraz doğrular."""
     evidence_parts: list[str] = []
+
+    vertical_values, vertical_evidence = _extract_risk_from_table_columns(soup)
+    horizontal_values, horizontal_evidence = _extract_risk_from_horizontal_row_pair(soup)
+    div_values, div_evidence = _extract_risk_from_div_grid_pairs(soup)
+    wide_values, wide_evidence = _extract_risk_from_wide_section(lines)
+    segment_values, segment_evidence = _extract_risk_from_section_segment(lines)
+
+    for evidence in (
+        vertical_evidence, horizontal_evidence, div_evidence,
+        wide_evidence, segment_evidence,
+    ):
+        if evidence:
+            evidence_parts.append(evidence)
+
+    # Açık etiket/bağlam kuralı ayrıca tablo satırı, bölüm ve yakın DOM üzerinde
+    # çalışır. Para birimi ve pay grubu yakınlığı v9.4'te kesinlikle kullanılmaz.
     text_values: list[int] = []
-
-    # 1) En güçlü kaynak: Risk Değeri başlığının altındaki aynı tablo kolonu.
-    column_values, column_evidence = _extract_risk_from_table_columns(soup)
-    if column_evidence:
-        evidence_parts.append(column_evidence)
-
-    # 2) Mevcut v9.1 metin kuralları aynen korunur.
     rows = table_rows_with_empty(soup)
     for index, row in enumerate(rows):
         joined = " | ".join(row)
         if not contains_any(joined, RISK_LABELS):
             continue
-        window = rows[index:index + 6]
+        window = rows[index:index + 2]  # yalnız başlık ve hemen alt satır
         evidence = " || ".join(" | ".join(item) for item in window)
-        evidence_parts.append(evidence)
-        values, _ = _risk_values_from_text(evidence)
+        values, detail = _risk_values_from_text(evidence)
+        if detail:
+            evidence_parts.append(f"AÇIK ETİKET TABLO: {detail}")
         text_values.extend(values)
-        if values:
-            break
 
-    if not text_values:
-        section = find_section_lines(lines, RISK_SECTION_LABELS, RISK_END_LABELS, max_lines=50)
-        if not section:
-            section = find_section_lines(lines, RISK_LABELS, RISK_END_LABELS, max_lines=30)
-        if section:
-            evidence = " | ".join(section)
-            evidence_parts.append(evidence)
-            values, _ = _risk_values_from_text(evidence)
-            text_values.extend(values)
-
-    if not text_values:
-        for block in nearby_dom_text(soup, RISK_LABELS, max_chars=1800):
-            evidence_parts.append(block)
-            values, _ = _risk_values_from_text(block)
-            text_values.extend(values)
-            if values:
-                break
+    section = _risk_section(lines)
+    if section:
+        values, detail = _risk_values_from_text(" | ".join(section))
+        if detail:
+            evidence_parts.append(f"AÇIK ETİKET BÖLÜM: {detail}")
+        text_values.extend(values)
 
     text_values = sorted(set(value for value in text_values if 1 <= value <= 7))
 
-    # 3) KAP'ın kolonları tek görünür satıra düzleştirdiği sayfalar için segment yedeği.
-    segment_values, segment_evidence = _extract_risk_from_section_segment(lines)
-    if segment_evidence:
-        evidence_parts.append(segment_evidence)
+    methods = {
+        "DİKEY_TABLO": vertical_values,
+        "YATAY_TABLO": horizontal_values,
+        "DIV_GRID": div_values,
+        "AÇIK_ETİKET": text_values,
+        "GENİŞ_BÖLÜM": wide_values,
+        "BÖLÜM_SEGMENTİ": segment_values,
+    }
+    active = {name: sorted(set(values)) for name, values in methods.items() if values}
 
-    # Karar önceliği: yapısal kolon > mevcut kurallar > segment yedeği.
-    if column_values:
-        values = column_values
-        selected_source = "KAP_DETAIL_HTML:Risk Değeri [TABLO/KOLON]"
-        cross_sources: list[str] = ["tablo kolonu"]
-        if text_values and set(text_values) == set(column_values):
-            cross_sources.append("mevcut metin kuralı")
-        if segment_values and set(segment_values).intersection(column_values):
-            cross_sources.append("bölüm segmenti")
-        confidence = "ÇOK YÜKSEK" if len(cross_sources) > 1 else "YÜKSEK"
-        reason = "Risk Değeri başlığının altındaki aynı kolon okundu"
-        if len(cross_sources) > 1:
-            reason += "; " + " + ".join(cross_sources[1:]) + " ile doğrulandı"
+    structural = {
+        name: values for name, values in active.items()
+        if name in {"DİKEY_TABLO", "YATAY_TABLO", "DIV_GRID"}
+    }
+    structural_union = sorted(set(value for values in structural.values() for value in values))
+    if len(structural_union) > 1:
+        return ParseValue(
+            value="—",
+            raw_value=", ".join(map(str, structural_union)),
+            source_label="KAP_DETAIL_HTML:Risk Değeri [YAPISAL ÇELİŞKİ]",
+            evidence=truncate(" || ".join(dict.fromkeys(evidence_parts)), 2400),
+            confidence="YOK",
+            matched_scope="YAPISAL_CELISKI",
+            decision_reason=f"Yatay/dikey/div yapısal kontroller çelişti: {structural}.",
+            conflict_flag="EVET",
+        )
+
+    if structural_union:
+        values = structural_union
+        supporting = [name for name, candidates in active.items() if set(candidates).intersection(values)]
+        confidence = "ÇOK YÜKSEK" if len(supporting) >= 2 else "YÜKSEK"
+        source = "KAP_DETAIL_HTML:Risk Değeri [YATAY+DİKEY YAPISAL]"
+        reason = "Risk başlık satırı ve hemen altındaki veri satırı yapısal olarak okundu"
+        if len(supporting) >= 2:
+            reason += "; " + " + ".join(supporting) + " aynı değeri doğruladı"
         reason += "."
+        scope = "YAPISAL_YATAY_DIKEY"
     elif text_values:
         values = text_values
-        selected_source = "KAP_DETAIL_HTML:Risk Değeri [MEVCUT KURAL]"
-        agrees = bool(segment_values and set(segment_values).intersection(text_values))
-        confidence = "ÇOK YÜKSEK" if agrees else "YÜKSEK"
-        reason = "Mevcut etiket ve bağlam kurallarıyla risk değeri bulundu"
-        if agrees:
-            reason += "; bölüm segmentiyle doğrulandı"
-        reason += "."
+        supporting = [name for name, candidates in active.items() if set(candidates).intersection(values)]
+        confidence = "ÇOK YÜKSEK" if len(supporting) >= 2 else "YÜKSEK"
+        source = "KAP_DETAIL_HTML:Risk Değeri [AÇIK ETİKET]"
+        reason = "Açık Risk Değeri etiketiyle 1-7 değeri bulundu."
+        scope = "ACIK_ETIKET"
+    elif wide_values and segment_values and set(wide_values).intersection(segment_values):
+        values = sorted(set(wide_values).intersection(segment_values))
+        confidence = "ÇOK YÜKSEK"
+        source = "KAP_DETAIL_HTML:Risk Değeri [GENİŞ BÖLÜM + SON SEGMENT]"
+        reason = "ALC tipi geniş bölüm sonu değeri iki bağımsız metin yöntemiyle doğrulandı."
+        scope = "GENIS_BOLUM_DOGRULANMIS"
+    elif wide_values:
+        values = wide_values
+        confidence = "YÜKSEK"
+        source = "KAP_DETAIL_HTML:Risk Değeri [GENİŞ BÖLÜM]"
+        reason = "Sınırlandırılmış risk bölümünün sonundaki bağımsız 1-7 değeri bulundu."
+        scope = "GENIS_BOLUM"
     elif segment_values:
         values = segment_values
-        selected_source = "KAP_DETAIL_HTML:Risk Değeri [BÖLÜM SEGMENTİ]"
         confidence = "ORTA"
-        reason = (
-            "Tablo kolonu ayrı hücre olarak ayrıştırılamadı; açık Risk Değeri "
-            "bölümünün son veri segmentindeki tek 1-7 değeri kullanıldı."
-        )
+        source = "KAP_DETAIL_HTML:Risk Değeri [BÖLÜM SEGMENTİ]"
+        reason = "Risk bölümünün son veri segmentindeki bağımsız 1-7 değeri kullanıldı."
+        scope = "BOLUM_SEGMENTI"
     else:
         return ParseValue(
             value="—",
             raw_value="",
             source_label="KAP_DETAIL_HTML:Risk Değeri",
-            evidence=truncate(" || ".join(dict.fromkeys(evidence_parts)), 1800)
+            evidence=truncate(" || ".join(dict.fromkeys(evidence_parts)), 2400)
             or "İlgili görünür KAP bölümünde güvenilir 1-7 risk değeri bulunamadı.",
             confidence="YOK",
-            decision_reason="Kolon, mevcut metin ve bölüm segmenti yöntemlerinin hiçbiri güvenilir risk değeri üretmedi.",
+            decision_reason="Yatay, dikey, div/grid, açık etiket, geniş bölüm ve son segment yöntemleri sonuç üretmedi.",
         )
 
     values = sorted(set(value for value in values if 1 <= value <= 7))
@@ -1414,20 +1545,15 @@ def extract_risk(soup: BeautifulSoup, lines: Sequence[str]) -> ParseValue:
     return ParseValue(
         value=str(selected),
         raw_value=detail,
-        source_label=selected_source,
-        evidence=truncate(" || ".join(dict.fromkeys(evidence_parts)), 1800),
+        source_label=source,
+        evidence=truncate(" || ".join(dict.fromkeys(evidence_parts)), 2400),
         confidence=confidence,
-        matched_scope=(
-            "TABLO_KOLON" if column_values else
-            "MEVCUT_METIN" if text_values else
-            "BOLUM_SEGMENTI"
-        ),
+        matched_scope=scope,
         decision_reason=(
             reason if len(values) == 1
-            else reason + f" Çoklu pay grubu değerleri ({detail}) içinde ana risk olarak en yüksek değer {selected} seçildi."
+            else reason + f" Çoklu değerler ({detail}) içinde ana risk olarak en yüksek değer {selected} seçildi."
         ),
     )
-
 
 def extract_transaction(
     soup: BeautifulSoup,
@@ -1913,24 +2039,23 @@ def save_investor_form(fund: FundEntry, content: bytes, text: str) -> None:
 def extract_start_from_investor_form(text: str) -> ParseValue:
     normalized = normalize_text(text)
     date_expr = r"((?:0?[1-9]|[12]\d|3[01])\s*[./-]\s*(?:0?[1-9]|1[0-2])\s*[./-]\s*(?:19|20)\d{2})"
+    sep = r"\s*[:：]?\s*"
     patterns = (
-        # Halka arz/satış/ihraç tarihleri kuruluş tarihinden önce denenir.
-        ("Fonun halka arz tarihi", rf"Fon[’'`]?un\s+halka\s+arz\s+tarihi\s*:?\s*{date_expr}"),
-        ("Halka arz tarihi", rf"Halka\s+arz\s+tarihi\s*:?\s*{date_expr}"),
-        ("Fonun satış başlangıç tarihi", rf"Fon[’'`]?un\s+satış\s+başlangıç\s+tarihi\s*:?\s*{date_expr}"),
-        ("Satış başlangıç tarihi", rf"Satış\s+başlangıç\s+tarihi\s*:?\s*{date_expr}"),
+        # Yatırımcı Bilgi Formu'ndaki resmî ana etiket önce değerlendirilir.
+        # Hem "İhraç Tarihi: 06/11/2006" hem "İhraç Tarihi:06/11/2006" desteklenir.
+        ("İhraç tarihi", rf"İhraç\s*Tarihi{sep}{date_expr}"),
+        ("İlk ihraç tarihi", rf"İlk\s+İhraç\s+Tarihi{sep}{date_expr}"),
+        ("Fonun halka arz tarihi", rf"Fon[’'`]?un\s+Halka\s+Arz\s+Tarihi{sep}{date_expr}"),
+        ("Halka arz tarihi", rf"Halka\s+Arz\s+Tarihi{sep}{date_expr}"),
+        ("Fonun satış başlangıç tarihi", rf"Fon[’'`]?un\s+Satış\s+Başlangıç\s+Tarihi{sep}{date_expr}"),
+        ("Satış başlangıç tarihi", rf"Satış\s+Başlangıç\s+Tarihi{sep}{date_expr}"),
         (
             "Fon paylarının satış başlangıç tarihi",
             rf"Fon\s+paylarının\s+satışına\s+{date_expr}\s+tarihinde\s+başlanmıştır",
         ),
-        ("İlk ihraç tarihi", rf"İlk\s+ihraç\s+tarihi\s*:?\s*{date_expr}"),
-        ("İhraç tarihi", rf"İhraç\s*tarihi\s*:?\s*{date_expr}"),
-        ("Fonun başlangıç tarihi", rf"Fon[’'`]?un\s+başlangıç\s+tarihi\s*:?\s*{date_expr}"),
-        (
-            "Fonun kuruluş tarihi",
-            rf"Fon[’'`]?un\s+kuruluş\s+tarihi\s*:?\s*{date_expr}",
-        ),
-        ("Kuruluş tarihi", rf"Kuruluş\s+tarihi\s*:?\s*{date_expr}"),
+        ("Fonun başlangıç tarihi", rf"Fon[’'`]?un\s+Başlangıç\s+Tarihi{sep}{date_expr}"),
+        ("Fonun kuruluş tarihi", rf"Fon[’'`]?un\s+Kuruluş\s+Tarihi{sep}{date_expr}"),
+        ("Kuruluş tarihi", rf"Kuruluş\s+Tarihi{sep}{date_expr}"),
     )
 
     for label, pattern in patterns:
@@ -1947,16 +2072,16 @@ def extract_start_from_investor_form(text: str) -> ParseValue:
             source_label=f"KAP_YBF_PDF:{label}",
             evidence=truncate(match.group(0), 800),
             confidence="YÜKSEK",
+            decision_reason="PDF içindeki resmî tarih etiketi ve gg/mm/yyyy değeri eşleştirildi.",
         )
 
     return ParseValue(
         value="—",
         raw_value="",
         source_label="KAP_YBF_PDF:Başlangıç",
-        evidence="Yatırımcı Bilgi Formu içinde ihraç/satış/kuruluş tarihi bulunamadı.",
+        evidence="Yatırımcı Bilgi Formu içinde İhraç Tarihi veya diğer başlangıç tarihleri bulunamadı.",
         confidence="YOK",
     )
-
 
 def extract_risk_from_investor_form(text: str) -> ParseValue:
     values, detail = _risk_values_from_text(text)
@@ -2330,7 +2455,7 @@ def test_one_fund(
         db_trade = normalize_text(db.get("transaction_status"))
         tefas_row = tefas_traded_funds.get(fund.fund_code, {})
 
-        parse_method = "KAP_LIST_JSON + KAP_DETAIL_VISIBLE_HTML + TEFAS_TRADED_LIST_JSON"
+        parse_method = f"{SCRIPT_VERSION} | KAP_LIST_JSON + KAP_DETAIL_VISIBLE_HTML + TEFAS_TRADED_LIST_JSON"
         if investor_form_url:
             parse_method += " + KAP_SUMMARY_HTML + KAP_YBF_PDF"
 
