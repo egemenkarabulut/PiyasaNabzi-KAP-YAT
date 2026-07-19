@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-KAP YAT HAM + DETAY + TEFAS DOĞRULAMA TESTİ v9.5
+KAP YAT HAM + DETAY + TEFAS DOĞRULAMA TESTİ v9.6
 ===================================
 
 Bu dosya, önce KAP YF aktif fon ana listesini indirir; ardından seçilen fonların
@@ -53,7 +53,7 @@ import threading
 import time
 import unicodedata
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from dataclasses import asdict, dataclass
+from dataclasses import MISSING, asdict, dataclass, fields
 from datetime import date, datetime
 from pathlib import Path
 from io import BytesIO
@@ -110,7 +110,7 @@ BLOCK_COOLDOWN_SECONDS = 600
 REQUEST_TIMEOUT_SECONDS = 50
 MAX_RETRIES = 4
 DEFAULT_RETRY_ROUNDS = 3
-SCRIPT_VERSION = "v9.5-kap-pdf-tefas-start-fallback-1"
+SCRIPT_VERSION = "v9.6-tefas-profile-risk-trade-1"
 
 HEADERS_JSON = {
     "User-Agent": (
@@ -340,6 +340,72 @@ class FundResult:
 
     parse_method: str
     error: str
+
+    # v9.6 — KAP sonucu ayrı korunur; TEFAS profil sonucu nihai alanları
+    # doğrulayabilir veya düzeltebilir. Varsayılanlar eski checkpoint kayıtlarının
+    # veri kaybı olmadan yüklenebilmesi içindir.
+    kap_transaction_status: str = "BİLİNMİYOR"
+    kap_transaction_source: str = "—"
+    kap_transaction_evidence: str = "—"
+    kap_transaction_confidence: str = "YOK"
+
+    tefas_profile_checked_at: str = ""
+    tefas_profile_attempt_count: int = 0
+    tefas_profile_api_status: str = "NOT_CHECKED"
+    tefas_profile_http_status: int | None = None
+    tefas_profile_error: str = ""
+    tefas_profile_fund_name: str = "—"
+    tefas_profile_isin: str = "—"
+    tefas_profile_kap_link: str = "—"
+
+    tefas_status_raw: str = "—"
+    tefas_status_normalized: str = "KONTROL"
+    tefas_bulk_status_raw: str = "—"
+    tefas_bulk_status_normalized: str = "KONTROL"
+    tefas_internal_conflict: str = "HAYIR"
+    kap_tefas_status_comparison: str = "KONTROL"
+
+    tefas_profile_risk_raw: str = "—"
+    tefas_profile_risk: str = "—"
+    tefas_bulk_risk_raw: str = "—"
+    tefas_bulk_risk: str = "—"
+    risk_tefas_comparison: str = "KONTROL"
+    risk_conflict_flag: str = "HAYIR"
+
+
+def fund_result_from_dict(row: dict[str, Any]) -> FundResult:
+    """Eski ve yeni checkpoint satırlarını veri kaybı olmadan yükler.
+
+    v9.5 kayıtlarında v9.6 TEFAS profil alanları yoktur. Bu yardımcı yalnız yeni
+    alanlara varsayılan değer verir; eski 2.138 kaydın hiçbirini düşürmez.
+    """
+    if not isinstance(row, dict):
+        raise TypeError("FundResult satırı sözlük olmalıdır.")
+
+    values: dict[str, Any] = {}
+    missing_required: list[str] = []
+    for field in fields(FundResult):
+        if field.name in row:
+            values[field.name] = row[field.name]
+        elif field.default is not MISSING:
+            values[field.name] = field.default
+        elif field.default_factory is not MISSING:  # type: ignore[comparison-overlap]
+            values[field.name] = field.default_factory()  # type: ignore[misc]
+        else:
+            missing_required.append(field.name)
+
+    if missing_required:
+        raise ValueError(f"FundResult zorunlu alanları eksik: {missing_required}")
+
+    # Eski kayıtların transaction alanı o tarihteki KAP/TEFAS-listesi sonucudur.
+    # Ayrı KAP alanı yoksa ilk migrasyonda bu değer kanıt olarak korunur.
+    if normalize_text(values.get("kap_transaction_status")) in {"", "—", "BİLİNMİYOR"}:
+        values["kap_transaction_status"] = normalize_text(values.get("transaction_status")) or "BİLİNMİYOR"
+        values["kap_transaction_source"] = normalize_text(values.get("transaction_source")) or "—"
+        values["kap_transaction_evidence"] = normalize_text(values.get("transaction_evidence")) or "—"
+        values["kap_transaction_confidence"] = normalize_text(values.get("transaction_confidence")) or "YOK"
+
+    return FundResult(**values)
 
 
 # -----------------------------------------------------------------------------
@@ -2660,16 +2726,11 @@ def load_progress() -> dict[str, FundResult]:
         if isinstance(rows, list):
             rows = {normalize_text(row.get("fund_code")).upper(): row for row in rows if isinstance(row, dict)}
         result: dict[str, FundResult] = {}
-        allowed = set(FundResult.__annotations__)
         for code, row in rows.items():
             if not isinstance(row, dict):
                 continue
-            clean = {key: row.get(key) for key in allowed}
-            missing = allowed - set(clean)
-            if missing:
-                continue
             try:
-                item = FundResult(**clean)
+                item = fund_result_from_dict(row)
             except Exception:
                 continue
             normalized_code = normalize_text(code or item.fund_code).upper()
