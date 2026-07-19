@@ -1,181 +1,200 @@
 # Piyasa Nabzı Türkiye — YAT/KAP Merkezi
 
-Bu repository, **KAP aktif YF/Y yatırım fonu evrenini** v9.5 kurallarıyla tarar, eksik alanları kontrollü kaynak zinciriyle tamamlar, kalıcı checkpoint üzerinden kaldığı yerden devam eder ve kalite eşiği geçildiğinde public JSON veri beslemesi üretir.
+Bu repository, **KAP aktif YF/Y yatırım fonu evrenini** v9.6 kurallarıyla tarar; fon adı, başlangıç yılı, risk seviyesi ve işlem durumunu resmî kaynak zinciriyle doğrular; kalıcı checkpoint üzerinden kaldığı yerden devam eder ve kalite eşiği geçildiğinde public JSON üretir.
 
-## Büyük Resim — Veri Mimarisi
+v9.6 ile iki yeni TEFAS kaynağı üretim sistemine eklenmiştir:
 
-Sistem dört temel katmandan oluşur:
+- `POST /api/funds/fonProfilBilgiGetir`
+  - `riskDegeri`
+  - `tefasDurum`
+  - `isinKodu`
+  - `kapLink`
+- `POST /api/funds/fonGetiriBazliBilgiGetir`
+  - toplu `riskDegeri`
+  - toplu `tefasDurum` teşhisi
 
-1. **Kaynak katmanı:** KAP aktif fon listesi, KAP Genel Bilgiler HTML, KAP Yatırımcı Bilgi Formu PDF ve yalnız gerekli olduğunda TEFAS JSON.
-2. **Ayrıştırma ve doğrulama katmanı:** Fon adı, başlangıç yılı, risk seviyesi ve işlem durumu kuralları.
-3. **Kalıcı çalışma katmanı:** Checkpoint, deneme sayıları, hata kayıtları ve fallback teşhisleri.
-4. **Yayın katmanı:** Kalite kontrolü tamamlandıktan sonra güncellenen resmî JSON.
+TLY, BCK ve DKC canlı testleri sonucunda aşağıdaki kurallar doğrulanmıştır:
+
+- TLY: KAP risk `7` = TEFAS profil risk `7` = TEFAS toplu risk `7`.
+- BCK ve DKC: KAP sonucu `KAPALI` iken TEFAS profil `TEFAS'ta işlem görüyor` ve işlem listesi eşleşmesi `EVET`; nihai işlem durumu `AÇIK` kabul edilir.
+- TEFAS `riskDegeri` bazı fonlarda gerçekten `null` olabilir. Bu durumda risk uydurulmaz ve alan boş bırakılır.
+
+---
+
+## 1. Büyük Resim — Veri Mimarisi
+
+Sistem beş katmandan oluşur:
+
+1. **Evren katmanı:** KAP aktif YF/Y fon listesi.
+2. **KAP ayrıştırma katmanı:** Genel Bilgiler HTML ve Yatırımcı Bilgi Formu PDF.
+3. **TEFAS zenginleştirme katmanı:** Profil, toplu risk, işlem listesi ve 60 aylık başlangıç serisi.
+4. **Kalıcı çalışma katmanı:** Checkpoint, retry sayıları, çatışmalar ve diagnostics.
+5. **Yayın katmanı:** Kalite eşiği geçildikten sonra resmî JSON.
 
 ### Genel Akış Diyagramı
 
 ```mermaid
 flowchart TD
-    A["GitHub Actions veya yerel çalışma"] --> B["KAP aktif YF/Y fon evrenini al"]
-    B --> C["Mevcut checkpoint'i yükle"]
-    C --> D["İşlenecek batch'i seç"]
-    D --> E["KAP Genel Bilgiler HTML"]
-    E --> F["KAP Yatırımcı Bilgi Formu PDF fallback"]
-    F --> G{"start_year hâlâ eksik mi?"}
-    G -- "Hayır" --> H["Alan kalite kontrolü"]
-    G -- "Evet" --> I["TEFAS 60 aylık JSON fallback"]
-    I --> H
-    H --> J["Checkpoint ve diagnostics yaz"]
-    J --> K{"Kalite eşiği geçti mi?"}
-    K -- "Hayır" --> L["IN_PROGRESS veya COMPLETE_WITH_UNRESOLVED"]
-    K -- "Evet" --> M["data/yat_fund_enrichment.json yayımla"]
+    A["GitHub Actions veya yerel çalışma"] --> B["KAP aktif YF/Y fon evreni"]
+    B --> C["Mevcut checkpoint'i veri kaybı olmadan yükle"]
+    C --> D["Öncelikli batch seç"]
+    D --> E["TEFAS toplu risk snapshot — tek POST"]
+    E --> F["Fon başına TEFAS profil — tek POST"]
+    F --> G["KAP Genel Bilgiler HTML"]
+    G --> H["KAP YBF PDF fallback"]
+    H --> I["Gerekirse TEFAS 60 ay başlangıç fallback"]
+    I --> J["Risk ve trade kararlarını birleştir"]
+    J --> K["Checkpoint + diagnostics yaz"]
+    K --> L{"Kalite eşiği geçti mi?"}
+    L -- "Hayır" --> M["IN_PROGRESS / COMPLETE_WITH_UNRESOLVED"]
+    L -- "Evet" --> N["data/yat_fund_enrichment.json yayımla"]
 ```
 
 ---
 
-## Yayınlanan Ana Alanlar
-
-Her fon için aşağıdaki ana alanlar yayımlanır:
+## 2. Yayınlanan Ana Alanlar
 
 | Alan | Anlamı | Birincil kaynak | Kontrollü yedek |
 |---|---|---|---|
-| `fund_name` | Resmî fon adı | KAP aktif YF/Y listesi | Mevcut doğrulanmış kayıt korunur |
-| `start_year` | Fon başlangıç yılı | KAP HTML | KAP PDF → TEFAS 60 aylık JSON |
-| `risk_level` | Risk seviyesi | KAP HTML | KAP PDF |
-| `trade_status` | İşlem durumu | KAP Alım Satım Yerleri | Güncel TEFAS işlem doğrulaması |
+| `fund_name` | Resmî fon adı | KAP aktif YF/Y listesi | Eski doğrulanmış kayıt |
+| `start_year` | Fon başlangıç yılı | KAP HTML | KAP PDF → TEFAS 60 ay JSON |
+| `risk_level` | Risk seviyesi 1–7 | KAP HTML | KAP PDF → TEFAS toplu → TEFAS profil |
+| `trade_status` | Nihai işlem durumu | TEFAS profil `tefasDurum` | TEFAS işlem listesi → KAP sonucu |
+| `transaction_status` | Geriye dönük uyumluluk alanı | `trade_status` ile aynı | — |
 
-Geriye dönük uyumluluk için `transaction_status`, `trade_status` ile aynı değeri taşır.
+### Yeni v9.6 Kanıt Alanları
+
+Public JSON ve checkpoint aşağıdaki doğrulama alanlarını da taşır:
+
+- `risk_source`
+- `risk_confidence`
+- `risk_conflict_flag`
+- `risk_tefas_comparison`
+- `tefas_profile_risk_raw`
+- `tefas_bulk_risk_raw`
+- `kap_transaction_status`
+- `kap_transaction_source`
+- `kap_tefas_status_comparison`
+- `tefas_status_raw`
+- `tefas_status_normalized`
+- `tefas_internal_conflict`
+- `tefas_traded_list_match`
+- `tefas_traded_list_status`
+- `transaction_conflict_flag`
+- `tefas_profile_checked_at`
+- `tefas_profile_api_status`
+- `tefas_profile_isin`
+- `tefas_profile_kap_link`
 
 ### Alan Veri Mimarisi
 
 ```mermaid
 flowchart LR
-    A["KAP aktif fon kodu"] --> B["fund_name"]
+    A["Fon kodu"] --> B["fund_name"]
     A --> C["start_year"]
     A --> D["risk_level"]
     A --> E["trade_status"]
 
     C --> C1["KAP HTML"]
     C1 --> C2["KAP PDF"]
-    C2 --> C3["TEFAS JSON 60 ay"]
+    C2 --> C3["TEFAS 60 ay JSON"]
 
-    D --> D1["KAP HTML tablo/grid"]
+    D --> D1["KAP HTML"]
     D1 --> D2["KAP PDF"]
+    D2 --> D3["TEFAS toplu riskDegeri"]
+    D3 --> D4["TEFAS profil riskDegeri"]
 
-    E --> E1["KAP Alım Satım Yerleri"]
-    E1 --> E2["TEFAS işlem doğrulaması"]
+    E --> E1["TEFAS profil tefasDurum"]
+    E1 --> E2["getFplFonList doğrulaması"]
+    E2 --> E3["KAP kanıtı ve çatışma kaydı"]
 
-    B --> F["Public JSON kaydı"]
+    B --> F["Public JSON"]
     C --> F
     D --> F
     E --> F
 ```
 
-### Alan Yayın Akışı
-
-```mermaid
-flowchart TD
-    A["Ayrıştırılmış FundResult"] --> B{"Alan bulundu mu?"}
-    B -- "Evet" --> C["FOUND"]
-    B -- "Hayır" --> D["SOURCE_NOT_FOUND veya UNRESOLVED"]
-    C --> E["public_record oluştur"]
-    D --> E
-    E --> F["trade_status bilinmiyorsa KONTROL"]
-    F --> G["transaction_status ile uyumluluk alanı üret"]
-    G --> H["Kalite kontrolüne gönder"]
-```
-
 ---
 
-## v9.5 Kaynak Önceliği
+## 3. Kaynak Önceliği
 
-Genel kaynak önceliği, resmî ve doğrudan kaynakların yedek kaynaklardan önce kullanılmasını sağlar.
-
-### Genel Kaynak Mimarisi
-
-```mermaid
-flowchart TD
-    A["KAP aktif YF/Y ana listesi"] --> B["Fon kodu ve resmî fon adı"]
-    B --> C["KAP Genel Bilgiler HTML"]
-    C --> D["KAP Yatırımcı Bilgi Formu PDF"]
-    D --> E{"Başlangıç yılı hâlâ eksik mi?"}
-    E -- "Evet" --> F["TEFAS JSON 60 ay"]
-    E -- "Hayır" --> G["KAP sonucu korunur"]
-    F --> H["Yalnız start_year fallback sonucu"]
-    G --> I["Birleştirilmiş fon kaydı"]
-    H --> I
-```
-
-### Kaynak Üstünlüğü
+### Genel Kaynak Sırası
 
 ```text
-KAP aktif liste / KAP HTML
+KAP aktif liste / KAP görünür HTML
         >
 KAP Yatırımcı Bilgi Formu PDF
         >
-TEFAS 60 aylık JSON başlangıç yedeği
+TEFAS doğrulanmış JSON alanları
         >
-Eksik bırakma; tahmin yapmama
+Eksik bırakma — tahmin yapmama
+```
+
+TEFAS kaynakları alan bazında kullanılır. TEFAS risk fallback’i, geçerli KAP riskini ezmez. TEFAS profil işlem durumu ise açık ve doğrudan bir işlem kanıtı olduğu için KAP sonucuyla çatıştığında nihai işlem durumunu düzeltebilir; eski KAP sonucu ayrıca saklanır.
+
+### Kaynak Üstünlüğü Diyagramı
+
+```mermaid
+flowchart TD
+    A["KAP aktif liste"] --> B["KAP HTML"]
+    B --> C["KAP PDF"]
+    C --> D["TEFAS alan bazlı JSON"]
+    D --> E{"Doğrulanmış değer var mı?"}
+    E -- "Evet" --> F["Kaynak önceliğine göre kabul"]
+    E -- "Hayır" --> G["Eksik bırak"]
+    F --> H["Kanıt ve kaynak etiketini sakla"]
+    G --> H
 ```
 
 ---
 
-### Fon Adı
+## 4. Fon Adı
 
-#### Veri Mimarisi
-
-Fon adı, KAP aktif `YF/Y` ana listesindeki resmî ad üzerinden alınır. Daha önce doğrulanmış dolu fon adı, geçici boş veya hatalı cevapla ezilmez.
+Fon adı KAP aktif `YF/Y` ana listesindeki resmî addır. Profil JSON’daki ad teşhis amacıyla saklanabilir; KAP ana liste adı otomatik olarak profil adıyla ezilmez.
 
 ```mermaid
 flowchart TD
     A["KAP aktif YF/Y listesi"] --> B{"Fon kodu bulundu mu?"}
     B -- "Evet" --> C["Resmî fon adını al"]
-    B -- "Hayır" --> D["Eski doğrulanmış kaydı koru"]
-    C --> E{"Yeni ad dolu mu?"}
-    E -- "Evet" --> F["fund_name güncelle"]
-    E -- "Hayır" --> D
-    D --> G["Checkpoint kaydı"]
-    F --> G
+    B -- "Hayır" --> D["Eski doğrulanmış adı koru"]
+    C --> E["Checkpoint"]
+    D --> E
 ```
 
 ---
 
-### Başlangıç Tarihi / Yılı
+## 5. Başlangıç Tarihi / Yılı
 
-#### Veri Mimarisi
+### Kaynak Zinciri
 
-Başlangıç tarihi kaynak zinciri:
+1. KAP Genel Bilgiler görünür HTML.
+2. KAP Yatırımcı Bilgi Formu PDF.
+3. İlk iki kaynak sonuç üretmezse TEFAS 60 aylık fiyat JSON’u.
+4. Hiçbir kaynak güvenilir sonuç üretmezse alan boş kalır.
 
-1. KAP **Genel Bilgiler** görünür HTML alanları.
-2. KAP **Yatırımcı Bilgi Formu PDF**.
-3. İlk iki kaynak sonuç üretmezse TEFAS **60 aylık JSON fiyat serisi**.
-4. Hiçbir kaynak güvenilir sonuç üretmezse alan boş bırakılır; tahmin yapılmaz.
-
-KAP HTML/PDF kaynakları her zaman TEFAS yedeğinden üstündür. Mevcut KAP başlangıç tarihi TEFAS verisiyle ezilmez.
-
-#### Başlangıç Tarihi Akış Diyagramı
+### Başlangıç Akışı
 
 ```mermaid
 flowchart TD
     A["Fon kodu"] --> B["KAP Genel Bilgiler HTML"]
-    B --> C{"Doğrulanmış başlangıç etiketi ve tarih bulundu mu?"}
-    C -- "Evet" --> D["KAP_HTML start_date/start_year"]
-    C -- "Hayır" --> E["KAP Yatırımcı Bilgi Formu PDF"]
-    E --> F{"İhraç/başlangıç tarihi bulundu mu?"}
-    F -- "Evet" --> G["KAP_PDF start_date/start_year"]
-    F -- "Hayır" --> H["TEFAS JSON periyod=60"]
-    H --> I{"En eski geçerli tarih bulundu mu?"}
-    I -- "Hayır" --> J["Eksik bırak ve diagnostics yaz"]
-    I -- "Evet" --> K{"60 aylık sınır + 20 günden daha yeni mi?"}
-    K -- "Hayır" --> L["TRUNCATED: yıl yazma"]
-    K -- "Evet" --> M["TEFAS_FIRST_AVAILABLE_DATE_60M"]
-    D --> N["Birleştirilmiş kayıt"]
-    G --> N
-    M --> N
+    B --> C{"Doğrulanmış başlangıç etiketi var mı?"}
+    C -- "Evet" --> D["KAP_HTML start_year"]
+    C -- "Hayır" --> E["KAP YBF PDF"]
+    E --> F{"İhraç / başlangıç tarihi var mı?"}
+    F -- "Evet" --> G["KAP_PDF start_year"]
+    F -- "Hayır" --> H["TEFAS fonFiyatBilgiGetir periyod=60"]
+    H --> I["En eski geçerli tarihi seç"]
+    I --> J{"60 ay sınırı + 20 günden yeni mi?"}
+    J -- "Hayır" --> K["TRUNCATED — yıl yazma"]
+    J -- "Evet" --> L["TEFAS_FIRST_AVAILABLE_DATE_60M"]
+    D --> M["Birleştirilmiş kayıt"]
+    G --> M
+    L --> M
 ```
 
-#### KAP Başlangıç Etiketi Ailesi
+### KAP Başlangıç Etiketleri
 
-Parser tek bir ifadeye bağlı değildir. Aşağıdaki doğrulanmış etiket ailesi ve normalleştirilmiş türevleri korunur:
+Parser aşağıdaki doğrulanmış etiket ailesini ve normalleştirilmiş türevlerini destekler:
 
 - `Fonun Halka Arz Tarihi`
 - `Fon Halka Arz Tarihi`
@@ -193,25 +212,11 @@ Parser tek bir ifadeye bağlı değildir. Aşağıdaki doğrulanmış etiket ail
 - `Fonun İlk İhraç Tarihi`
 - `İlk İhraç Tarihi`
 - `İhraç Tarihi`
-- İngilizce KAP karşılıkları (`Public Offering Date`, `Inception Date`, `Issue Date` vb.)
+- İngilizce karşılıklar: `Public Offering Date`, `Inception Date`, `Issue Date` vb.
 
-Büyük/küçük harf, Türkçe karakter, boşluk, satır sonu, `:` işareti ve HTML hücre ayrımı normalleştirilir. Belge tarihi, rapor tarihi, güncelleme tarihi ve fiyat tarihi gibi ilgisiz tarihler başlangıç tarihi olarak kullanılmaz.
+Belge tarihi, rapor tarihi, güncelleme tarihi, dönem tarihi ve fiyat tarihi başlangıç tarihi olarak kullanılmaz.
 
-#### Etiket Ayrıştırma Akışı
-
-```mermaid
-flowchart TD
-    A["HTML veya PDF metni"] --> B["Metni normalize et"]
-    B --> C["Türkçe karakter / boşluk / satır sonu / iki nokta toleransı"]
-    C --> D["Doğrulanmış etiket ailesini tara"]
-    D --> E{"Yakınında geçerli tarih var mı?"}
-    E -- "Hayır" --> F["Sonraki etiket veya fallback"]
-    E -- "Evet" --> G{"İlgisiz tarih etiketi mi?"}
-    G -- "Evet" --> F
-    G -- "Hayır" --> H["start_date ve start_year üret"]
-```
-
-#### TEFAS 60 Aylık Başlangıç Yedeği
+### TEFAS 60 Aylık Kuralı
 
 Endpoint:
 
@@ -219,7 +224,7 @@ Endpoint:
 POST https://www.tefas.gov.tr/api/funds/fonFiyatBilgiGetir
 ```
 
-Payload:
+Örnek payload:
 
 ```json
 {"fonKodu":"IV7","dil":"TR","periyod":60}
@@ -227,378 +232,442 @@ Payload:
 
 Kesin kurallar:
 
-1. Endpoint yalnız KAP HTML ve KAP PDF başlangıç tarihi bulamadığında çağrılır.
-2. Fon başına yalnız **bir POST isteği** gönderilir.
-3. `resultList` içindeki **en eski geçerli tarih** esas alınır.
-4. İlk kaydın fiyatı `0` olsa bile tarih geçerlidir.
-5. Fiyat yalnız teşhis amacıyla saklanır; tarih kabulünü engellemez.
-6. En eski tarih, bugünden 60 ay önceki doğal sınırın `20 gün` çevresindeyse seri kırpılmış kabul edilir ve başlangıç yılı yazılmaz.
-7. Kaynak etiketi `TEFAS_FIRST_AVAILABLE_DATE_60M` olur.
-8. TEFAS WAF/HTTP/ağ hatasında mevcut KAP kaydı korunur ve kontrollü retry kuyruğu kullanılır.
-9. Bir batch içinde WAF reddi görülürse aynı batch'te yeni TEFAS başlangıç isteği gönderilmez.
-10. TEFAS başlangıç istekleri arasında rastgele `15–20 saniye` beklenir.
-
-#### TEFAS Veri Akışı
-
-```mermaid
-flowchart TD
-    A["start_year eksik fon"] --> B["Rate limiter izin kontrolü"]
-    B --> C{"Batch daha önce WAF ile engellendi mi?"}
-    C -- "Evet" --> D["BLOCKED_SKIPPED"]
-    C -- "Hayır" --> E["15–20 saniye koruma aralığı"]
-    E --> F["Tek POST isteği"]
-    F --> G{"HTTP/JSON başarılı mı?"}
-    G -- "Hayır" --> H["Retryable diagnostics"]
-    G -- "Evet" --> I["resultList tarihlerini ayrıştır"]
-    I --> J["En eski geçerli tarihi seç"]
-    J --> K["Fiyatı yalnız teşhis için kaydet"]
-    K --> L{"Tarih 60 ay sınırı + 20 günden yeni mi?"}
-    L -- "Hayır" --> M["TRUNCATED; start_year boş"]
-    L -- "Evet" --> N["start_year = ilk tarihin yılı"]
-```
+- `resultList` içindeki en eski geçerli tarih esas alınır.
+- İlk fiyat `0` olabilir; tarih geçerliliğini etkilemez.
+- Fiyat yalnız teşhis amacıyla saklanır.
+- En eski tarih 60 aylık doğal sınırın 20 gün çevresindeyse seri kırpılmış kabul edilir.
+- Fon başına aynı çalışma içinde yalnız bir başlangıç POST’u gönderilir.
 
 ---
 
-### Risk Seviyesi
+## 6. Risk Seviyesi
 
-#### Veri Mimarisi
-
-Kaynak sırası:
-
-1. KAP Genel Bilgiler görünür HTML.
-2. Güvenilir sonuç yoksa KAP Yatırımcı Bilgi Formu PDF.
-
-Çoklu risk değeri varsa tüm değerler korunur ve ana değer olarak en yüksek risk kullanılır.
-
-#### Risk Ayrıştırma Akışı
-
-```mermaid
-flowchart TD
-    A["KAP Genel Bilgiler HTML"] --> B["Risk Değeri başlığını bul"]
-    B --> C["rowspan/colspan ile görsel tabloyu genişlet"]
-    C --> D["Aynı sütundaki 1–7 değerlerini tara"]
-    D --> E["Yatay tablo / dikey sütun / div-grid çapraz kontrolü"]
-    E --> F{"Güvenilir risk bulundu mu?"}
-    F -- "Evet" --> G["Tüm risk değerlerini koru"]
-    G --> H["Ana risk = en yüksek değer"]
-    F -- "Hayır" --> I["KAP PDF fallback"]
-    I --> J{"PDF'de güvenilir 1–7 değeri bulundu mu?"}
-    J -- "Evet" --> G
-    J -- "Hayır" --> K["risk_level boş; tahmin yok"]
-```
-
-#### Risk Ayrıştırma Kuralları
-
-1. `Yatırım Stratejisi` sütununun sağındaki `Risk Değeri` başlığı bulunur.
-2. `rowspan`/`colspan` hesaba katılarak aynı sütunun alt satırındaki yalnız `1–7` değeri okunur.
-3. Yatay tablo, dikey görsel sütun, div/grid, açık etiket ve sınırlandırılmış geniş bölüm yöntemleri çapraz kontrol edilir.
-4. `TL`, `USD`, `EUR`, `A Grubu`, `B Grubu`, yüzde, ondalık ve `T+2` gibi yakın metinler risk adayı kabul edilmez.
-5. Güvenilir sonuç yoksa alan boş (`—`) bırakılır; tahmin yapılmaz.
-
-#### Yanlış Risk Adayı Engelleme Akışı
-
-```mermaid
-flowchart LR
-    A["Yakın metin adayı"] --> B{"Tam sayı 1–7 mi?"}
-    B -- "Hayır" --> X["Reddet"]
-    B -- "Evet" --> C{"TL/USD/EUR veya grup etiketiyle ilişkili mi?"}
-    C -- "Evet" --> X
-    C -- "Hayır" --> D{"Yüzde, ondalık veya T+2 bağlamı mı?"}
-    D -- "Evet" --> X
-    D -- "Hayır" --> E["Risk adayı olarak kabul et"]
-```
-
----
-
-### İşlem Durumu
-
-#### Veri Mimarisi
-
-- KAP `Alım Satım Yerleri` alanı merkezlidir.
-- Gerekli durumda güncel TEFAS işlem gören fon listesiyle doğrulanır.
-- Boş alan, yalnız kurucu veya yalnız banka/portföy kanalları: `KAPALI`.
-- Platformun tam adı/TEFDP veya doğrulanmış TEFAS erişimi: `AÇIK`.
-- Teknik erişim ya da gerçek DOM ayrıştırma problemi: `KONTROL`/teşhis kuyruğu.
-
-#### İşlem Durumu Akışı
-
-```mermaid
-flowchart TD
-    A["KAP Alım Satım Yerleri"] --> B{"Alan güvenilir biçimde okundu mu?"}
-    B -- "Hayır" --> C["KONTROL / teknik teşhis"]
-    B -- "Evet" --> D{"TEFAS/TEFDP veya doğrulanmış platform erişimi var mı?"}
-    D -- "Evet" --> E["AÇIK"]
-    D -- "Hayır" --> F{"Alan boş ya da yalnız kurucu/banka/portföy kanalı mı?"}
-    F -- "Evet" --> G["KAPALI"]
-    F -- "Hayır" --> H["Güncel TEFAS işlem listesiyle doğrula"]
-    H --> I{"İşlem görüyor mu?"}
-    I -- "Evet" --> E
-    I -- "Hayır" --> G
-```
-
----
-
-## Mevcut Kayıtları Koruma
-
-v9.5 güncellemesi mevcut checkpoint ve resmî JSON'u sıfırlamaz.
-
-- `data/staging/yat_kap_progress.json` aynen korunur.
-- `data/yat_fund_enrichment.json` kalite eşiği geçilmeden değiştirilmez.
-- Dolu ve doğrulanmış alan, yeni boş değerle ezilmez.
-- KAP başlangıç tarihi, TEFAS başlangıç tarihiyle ezilmez.
-- Geçici HTTP/WAF/ağ hatası daha önce doğrulanmış kaydın üzerine yazılmaz.
-- Eski v9.4 parser ile eksik kalmış kayıtlar, deneme sayısı `3` veya daha yüksek olsa bile v9.5 motorunda **bir kez parser-upgrade kuyruğuna** alınır.
-- v9.5 ile başarıyla işlenen kayıt aynı upgrade kuyruğuna tekrar girmez.
-
-Bu nedenle GitHub workflow mevcut kayıtların kaldığı yerden devam eder; tüm fonları sıfırdan taramaz.
-
-### Kayıt Koruma Mimarisi
-
-```mermaid
-flowchart TD
-    A["Mevcut checkpoint kaydı"] --> B["Yeni tarama sonucu"]
-    B --> C{"Yeni alan dolu ve güvenilir mi?"}
-    C -- "Hayır" --> D["Eski dolu alanı koru"]
-    C -- "Evet" --> E{"Kaynak önceliği daha yüksek mi?"}
-    E -- "Hayır" --> D
-    E -- "Evet" --> F["Alanı kontrollü güncelle"]
-    D --> G["Atomic checkpoint yaz"]
-    F --> G
-    G --> H{"Kalite eşiği geçti mi?"}
-    H -- "Hayır" --> I["Resmî JSON'u değiştirme"]
-    H -- "Evet" --> J["Resmî JSON'u atomik yayımla"]
-```
-
-### Kaldığı Yerden Devam Akışı
-
-```mermaid
-flowchart TD
-    A["Workflow başlar"] --> B["yat_kap_progress.json yüklenir"]
-    B --> C["unattempted / technical / TEFAS retry / incomplete / parser upgrade / stale listeleri"]
-    C --> D["Öncelikli batch seçilir"]
-    D --> E["Her fon işlenir"]
-    E --> F["Her sonuçtan sonra checkpoint güncellenir"]
-    F --> G{"Batch tamamlandı mı?"}
-    G -- "Hayır" --> E
-    G -- "Evet" --> H["data/ commit ve push"]
-    H --> I{"Run state tamamlandı mı?"}
-    I -- "Hayır" --> J["Soğuma ve sonraki batch"]
-    J --> D
-    I -- "Evet" --> K["Döngüyü bitir"]
-```
-
----
-
-## Hız ve Kilitlenme Koruması
-
-- Varsayılan 1 işçi mantığı.
-- KAP istekleri arasında minimum `1.35` saniye.
-- Workflow 60 fonluk kalıcı batch'ler hâlinde çalışır.
-- Her batch sonrasında staging ve diagnostics dosyaları GitHub'a commit edilir.
-- Batch'ler arasında varsayılan 180 saniye soğuma vardır.
-- HTTP 429 oluşursa KAP motoru 3 → 10 → 20 dakika kademeli bekler ve aynı noktadan devam eder.
-- TEFAS başlangıç JSON istekleri arasında rastgele 15–20 saniye bulunur.
-- TEFAS WAF reddinde aynı batch içindeki sonraki TEFAS başlangıç istekleri durdurulur; KAP taraması ve checkpoint kaydı korunur.
-- GitHub `concurrency` kilidi aynı veri güncelleme workflow'unun eşzamanlı çalışmasını engeller.
-
-### Koruma Akış Diyagramı
-
-```mermaid
-flowchart TD
-    A["Batch başlat"] --> B["KAP isteği"]
-    B --> C{"HTTP 429 mu?"}
-    C -- "Evet" --> D["3 → 10 → 20 dakika kademeli bekleme"]
-    D --> B
-    C -- "Hayır" --> E["Sonucu checkpoint'e yaz"]
-    E --> F{"TEFAS fallback gerekli mi?"}
-    F -- "Hayır" --> G["Sonraki fon"]
-    F -- "Evet" --> H["15–20 saniye rate limit"]
-    H --> I{"WAF reddi var mı?"}
-    I -- "Evet" --> J["Bu batch'te TEFAS fallback'i sustur"]
-    I -- "Hayır" --> K["Tek TEFAS POST"]
-    J --> G
-    K --> G
-    G --> L{"Batch tamamlandı mı?"}
-    L -- "Hayır" --> B
-    L -- "Evet" --> M["Commit / push / 180 saniye soğuma"]
-```
-
----
-
-## Kalıcı Dosyalar
+### Nihai Risk Kaynak Sırası
 
 ```text
-data/yat_fund_enrichment.json                   # Resmî yayın; kalite eşiği geçince güncellenir
-data/run_state.json                             # Çalışmanın mevcut durumu
-data/staging/yat_kap_progress.json              # Her başarılı/başarısız denemenin checkpoint'i
-data/staging/failed_codes.json                  # Yeniden denenecek kodlar
-data/diagnostics/request_failures.json          # Hata kategorileri ve ayrıntılar
-data/diagnostics/attempt_events.jsonl            # Genel deneme geçmişi
-data/diagnostics/pdf_fallback_events.jsonl       # KAP PDF fallback geçmişi
-data/diagnostics/tefas_start_year_events.jsonl   # TEFAS başlangıç fallback geçmişi
+1. KAP Genel Bilgiler HTML
+2. KAP Yatırımcı Bilgi Formu PDF
+3. TEFAS toplu fonGetiriBazliBilgiGetir.riskDegeri
+4. TEFAS tekil fonProfilBilgiGetir.riskDegeri
+5. Kaynakların tümü boşsa risk_level boş
 ```
 
-`yat_fund_enrichment.json`, tarama yarımken veya kalite eşiği geçilmemişken değiştirilmez. Staging ve diagnostics her batch sonunda repoda kalıcı hâle gelir.
+### Doğrudan TEFAS Risk Formülü
 
-### Dosya Veri Mimarisi
+Yalnız aşağıdaki doğrulanmış alan isimleri okunur:
+
+```text
+riskDegeri
+RiskDegeri
+riskValue
+```
+
+Kabul edilen değerler:
+
+```text
+1, 2, 3, 4, 5, 6, 7
+1/7 ... 7/7
+```
+
+Reddedilen değerler:
+
+```text
+null
+boş metin
+-
+0
+8 ve üzeri
+rastgele başka bir 1–7 sayısı
+```
+
+### Risk Karar Akışı
+
+```mermaid
+flowchart TD
+    A["KAP HTML risk"] --> B{"Geçerli 1–7 mi?"}
+    B -- "Evet" --> C["KAP riskini koru"]
+    B -- "Hayır" --> D["KAP PDF risk"]
+    D --> E{"Geçerli 1–7 mi?"}
+    E -- "Evet" --> C
+    E -- "Hayır" --> F["TEFAS toplu riskDegeri"]
+    F --> G["TEFAS profil riskDegeri"]
+    G --> H{"İki TEFAS değeri dolu mu?"}
+    H -- "İkisi aynı" --> I["Doğrulanmış TEFAS risk"]
+    H -- "İkisi farklı" --> J["RISK_CONFLICT — otomatik yazma"]
+    H -- "Yalnız biri dolu" --> K["Tek kaynak risk — YÜKSEK güven"]
+    H -- "İkisi boş" --> L["SOURCE_NOT_PUBLISHED — boş bırak"]
+    C --> M["TEFAS değerleri varsa karşılaştırma kaydet"]
+    I --> M
+    K --> M
+    J --> M
+    L --> M
+```
+
+### KAP Risk Ayrıştırma Kuralları
+
+1. `Yatırım Stratejisi` sütununun sağındaki `Risk Değeri` başlığı bulunur.
+2. `rowspan` ve `colspan` hesaba katılarak görsel tablo ızgarası oluşturulur.
+3. Aynı sütunun altındaki yalnız `1–7` değerleri okunur.
+4. Birden fazla doğrulanmış risk varsa tüm değerler saklanır, ana değer en yüksek risk olur.
+5. `TL`, `USD`, `EUR`, pay grubu, yüzde, ondalık ve `T+2` gibi bağlamlar risk değildir.
+
+### TLY Doğrulama Örneği
 
 ```mermaid
 flowchart LR
-    A["Tarama motoru"] --> B["data/staging/yat_kap_progress.json"]
-    A --> C["data/diagnostics/attempt_events.jsonl"]
-    A --> D["data/diagnostics/pdf_fallback_events.jsonl"]
-    A --> E["data/diagnostics/tefas_start_year_events.jsonl"]
-    A --> F["data/diagnostics/request_failures.json"]
+    A["KAP TLY risk = 7"] --> D["EŞLEŞİYOR"]
+    B["TEFAS profil riskDegeri = 7"] --> D
+    C["TEFAS toplu riskDegeri = 7"] --> D
+    D --> E["Nihai risk = 7; KAP kaynağı korunur"]
+```
 
-    B --> G["data/staging/failed_codes.json"]
-    B --> H["data/run_state.json"]
+### Risk Yayımlanmıyorsa
+
+BCK ve test edilen diğer birçok fonda profil ve toplu JSON satırında `riskDegeri` alanı mevcut olup değer `null` gelmiştir. Bu bir parser hatası değildir. Sistem:
+
+- risk tahmin etmez,
+- fon türünden risk üretmez,
+- getiri oynaklığından risk hesaplamaz,
+- herhangi bir `1–7` rakamını risk kabul etmez.
+
+---
+
+## 7. İşlem Durumu
+
+### Birincil Model
+
+TEFAS profil JSON’daki `tefasDurum`, nihai TEFAS işlem durumu kaynağıdır. `getFplFonList` doğrulama kaynağıdır. KAP sonucu kanıt ve çatışma kaydı olarak korunur.
+
+### Normalizasyon
+
+```text
+AKTİF                     → AÇIK
+PASİF                     → KAPALI
+TEFAS'ta işlem görüyor    → AÇIK
+TEFAS'ta işlem görmüyor   → KAPALI
+true / 1                  → AÇIK
+false / 0                 → KAPALI
+```
+
+Türkçe büyük `İ`, Unicode’da birleşik nokta karakterine dönüşse bile `AKTİF` doğru şekilde `AÇIK` olarak normalleştirilir.
+
+### İşlem Durumu Karar Akışı
+
+```mermaid
+flowchart TD
+    A["TEFAS profil tefasDurum"] --> B{"AÇIK/KAPALI çözüldü mü?"}
+    B -- "Evet" --> C["Nihai TEFAS adayı = profil sonucu"]
+    C --> D["getFplFonList ile doğrula"]
+    D --> E{"Profil ve liste uyumlu mu?"}
+    E -- "Evet" --> F["ÇOK YÜKSEK güven"]
+    E -- "Hayır" --> G["Profil sonucu korunur; TEFAS iç çatışması kaydedilir"]
+    B -- "Hayır" --> H{"İşlem listesinde EVET mi?"}
+    H -- "Evet" --> I["AÇIK fallback"]
+    H -- "Hayır" --> J["KAP sonucu fallback"]
+    F --> K["KAP sonucu ile karşılaştır"]
+    G --> K
+    I --> K
+    J --> K
+    K --> L{"KAP farklı mı?"}
+    L -- "Evet" --> M["Nihai TEFAS sonucunu kullan; çatışmayı sakla"]
+    L -- "Hayır" --> N["EŞLEŞİYOR"]
+```
+
+### BCK / DKC Doğrulama Örneği
+
+```mermaid
+flowchart LR
+    A["KAP sonucu = KAPALI"] --> D["KAP↔TEFAS = ÇATIŞMA"]
+    B["Profil: TEFAS'ta işlem görüyor = AÇIK"] --> E["Nihai işlem = AÇIK"]
+    C["getFplFonList = EVET / AKTİF"] --> E
+    D --> F["Eski KAP kanıtını sakla"]
+    E --> F
+```
+
+Kaydedilen yapı:
+
+```text
+transaction_status          = AÇIK
+trade_status                = AÇIK
+kap_transaction_status      = KAPALI
+kap_tefas_status_comparison = ÇATIŞMA
+transaction_conflict_flag   = EVET
+transaction_source          = TEFAS_PROFILE:tefasDurum + TEFAS:getFplFonList
+```
+
+---
+
+## 8. Mevcut Kayıtları Koruma ve Şema Migrasyonu
+
+v9.6 mevcut 2.138 checkpoint kaydını sıfırlamaz.
+
+- Eski v9.5 satırları yeni alanlar eksik olsa bile yüklenir.
+- Yeni alanlara yalnız güvenli varsayılanlar eklenir.
+- Eski `transaction_status`, ilk migrasyonda `kap_transaction_status` kanıtı olarak korunur.
+- Geçerli KAP risk değeri TEFAS fallback ile ezilmez.
+- Geçici HTTP/WAF/ağ hatası eski doğrulanmış KAP verisini silmez.
+- TEFAS profil sonucu başarılıysa KAP taraması o batch’te hata verse bile mevcut kayıt üzerine profil zenginleştirmesi uygulanabilir.
+
+### Migrasyon Akışı
+
+```mermaid
+flowchart TD
+    A["v9.5 checkpoint satırı"] --> B["fund_result_from_dict"]
+    B --> C["Eski zorunlu alanları aynen yükle"]
+    C --> D["Yeni v9.6 alanlarına varsayılan ekle"]
+    D --> E["Eski transaction sonucunu KAP kanıtı olarak koru"]
+    E --> F["TEFAS profil upgrade kuyruğuna bir kez al"]
+    F --> G["Atomic checkpoint v3 yaz"]
+```
+
+### Birleştirme Koruması
+
+```mermaid
+flowchart TD
+    A["Eski doğrulanmış kayıt"] --> B["Yeni KAP denemesi"]
+    B --> C{"Yeni KAP sonucu teknik hata mı?"}
+    C -- "Evet" --> D["Eski KAP alanlarını koru"]
+    C -- "Hayır" --> E["Yeni KAP alanlarını kaynak önceliğiyle birleştir"]
+    D --> F["TEFAS profil zenginleştirmesini uygula"]
+    E --> F
+    F --> G["Checkpoint"]
+```
+
+---
+
+## 9. Batch ve Retry Kuyruğu
+
+Öncelik sırası:
+
+```text
+1. Henüz hiç işlenmemiş fonlar
+2. Teknik KAP hataları
+3. TEFAS profil retry kayıtları
+4. Eski checkpoint için TEFAS profil upgrade kayıtları
+5. TEFAS başlangıç retry kayıtları
+6. Eksik alan retry kayıtları
+7. Eski parser upgrade kayıtları
+8. Süresi dolmuş stale kayıtlar
+```
+
+### Kuyruk Akışı
+
+```mermaid
+flowchart TD
+    A["Checkpoint yükle"] --> B["Queue kategorilerini oluştur"]
+    B --> C["Öncelik sırasına göre 60 fon seç"]
+    C --> D["Her fon sonrası atomik kayıt"]
+    D --> E{"Batch tamamlandı mı?"}
+    E -- "Hayır" --> D
+    E -- "Evet" --> F["Commit / push"]
+    F --> G{"PUBLISHED veya COMPLETE mi?"}
+    G -- "Hayır" --> H["180 saniye soğuma"]
+    H --> C
+    G -- "Evet" --> I["Döngüyü bitir"]
+```
+
+---
+
+## 10. Hız ve Kilitlenme Koruması
+
+- KAP istekleri arasında minimum `1.35` saniye.
+- Kalıcı batch boyutu varsayılan `60` fon.
+- TEFAS profil ve TEFAS başlangıç POST’ları aynı rate limiter sırasını paylaşır.
+- TEFAS fon-bazlı POST istekleri arasında rastgele `15–20 saniye` bulunur.
+- TEFAS profil için fon başına bir POST yapılır; aynı denemede otomatik tekrar yapılmaz.
+- Teknik profil hataları sonraki batch/run içinde en fazla `3` deneme alır.
+- TEFAS toplu risk endpoint’i batch başında yalnız bir kez çağrılır.
+- WAF reddinde aynı batch içindeki sonraki fon-bazlı TEFAS POST’ları susturulur; KAP ve checkpoint çalışması korunur.
+- Workflow varsayılan `max_batches=15` kullanır. Bu değer 6 saatlik GitHub süre sınırı içinde 15–20 saniyelik profil korumasına uygun seçilmiştir.
+- `concurrency` kilidi aynı workflow’un eşzamanlı çalışmasını engeller.
+
+### Rate Limit Akışı
+
+```mermaid
+flowchart TD
+    A["Fon başına TEFAS profil isteği"] --> B["15–20 saniye ortak limiter"]
+    B --> C{"WAF reddi var mı?"}
+    C -- "Evet" --> D["Batch içi TEFAS POST'larını BLOCKED_SKIPPED yap"]
+    C -- "Hayır" --> E["Tek POST gönder"]
+    E --> F["Profil sonucu kaydet"]
+    F --> G{"start_year fallback gerekli mi?"}
+    G -- "Evet" --> H["Aynı limiter üzerinden TEFAS 60 ay POST"]
+    G -- "Hayır" --> I["Sonraki fon"]
+    H --> I
+    D --> I
+```
+
+---
+
+## 11. Kalıcı Dosyalar
+
+```text
+data/yat_fund_enrichment.json                    # Resmî yayın
+data/run_state.json                              # Çalışma durumu
+data/staging/yat_kap_progress.json               # Kalıcı checkpoint
+data/staging/failed_codes.json                   # Retry kodları
+data/diagnostics/request_failures.json           # Hata ve eksik alan teşhisi
+data/diagnostics/attempt_events.jsonl             # Genel deneme geçmişi
+data/diagnostics/pdf_fallback_events.jsonl        # PDF fallback geçmişi
+data/diagnostics/tefas_start_year_events.jsonl    # TEFAS başlangıç geçmişi
+data/diagnostics/tefas_profile_events.jsonl       # Profil/risk/trade doğrulama geçmişi
+```
+
+GitHub artifact içinde ayrıca:
+
+```text
+.run_output/KAP_YAT_SOURCE/TEFAS_PROFIL_JSON/
+.run_output/KAP_YAT_SOURCE/TEFAS_TOPLU_RISK/
+.run_output/KAP_YAT_SOURCE/HAM_SAYFALAR/
+.run_output/KAP_YAT_SOURCE/HAM_BELGELER/
+```
+
+### Dosya Mimarisi
+
+```mermaid
+flowchart LR
+    A["Tarama motoru"] --> B["yat_kap_progress.json"]
+    A --> C["attempt_events.jsonl"]
+    A --> D["pdf_fallback_events.jsonl"]
+    A --> E["tefas_start_year_events.jsonl"]
+    A --> F["tefas_profile_events.jsonl"]
+    A --> G["request_failures.json"]
+    B --> H["run_state.json"]
     H --> I{"Kalite eşiği geçti mi?"}
-    I -- "Evet" --> J["data/yat_fund_enrichment.json"]
+    I -- "Evet" --> J["yat_fund_enrichment.json"]
     I -- "Hayır" --> K["Mevcut resmî JSON korunur"]
 ```
 
-### Dosya Yazma Akışı
+---
+
+## 12. Yayın Kalite Eşikleri
+
+Resmî JSON yalnız şu şartlarla güncellenir:
+
+- KAP aktif YF/Y fon sayısı en az `2.000`.
+- Ana evren kapsamı `%100`.
+- Doğrulanmış KAP sayfa oranı en az `%98`.
+- AÇIK/KAPALI nihai işlem durumu oranı en az `%98`.
+- TEFAS profil kontrol oranı en az `%98`.
+- Bekleyen retry/upgrade/stale kuyruğu `0`.
+
+Eksik risk alanı tek başına yayın engeli değildir; kaynak risk yayımlamıyorsa `SOURCE_NOT_PUBLISHED` olarak boş kalabilir.
 
 ```mermaid
 flowchart TD
-    A["Fon sonucu oluşur"] --> B["Attempt event ekle"]
-    B --> C["PDF/TEFAS fallback event ekle"]
-    C --> D["Checkpoint'i atomik yaz"]
-    D --> E["Failed codes ve diagnostics üret"]
-    E --> F["run_state güncelle"]
-    F --> G{"PUBLISH koşulları sağlandı mı?"}
-    G -- "Hayır" --> H["Staging ile devam"]
-    G -- "Evet" --> I["Public JSON'u atomik yaz"]
+    A["Checkpoint tamamlandı"] --> B{"Kapsam %100 mü?"}
+    B -- "Hayır" --> X["Yayınlama"]
+    B -- "Evet" --> C{"KAP sayfa oranı ≥ %98 mi?"}
+    C -- "Hayır" --> X
+    C -- "Evet" --> D{"Trade oranı ≥ %98 mi?"}
+    D -- "Hayır" --> X
+    D -- "Evet" --> E{"TEFAS profil oranı ≥ %98 mi?"}
+    E -- "Hayır" --> X
+    E -- "Evet" --> F{"Bekleyen kuyruk 0 mı?"}
+    F -- "Hayır" --> X
+    F -- "Evet" --> G["Public JSON'u atomik yayımla"]
 ```
 
 ---
 
-## v9.5 Güncellemesini Mevcut Repoya Uygulama
+## 13. GitHub’a Uygulama
 
-Yalnız değişen/yeni dosyaları repository köküne aynı klasör yapısıyla yükleyin:
+Repository köküne aynı klasör yapısıyla şu dosyaları yükleyip değiştirin:
 
 ```text
 .github/workflows/update-yat-kap-data.yml
 scripts/kap_yat_source.py
 scripts/update_yat_kap_data.py
+scripts/tefas_profile_source.py
 scripts/tefas_start_year_source.py
 tests/test_parser.py
 README.md
-CHANGES_v2.5_v9.5.md
+CHANGES_v2.6_v9.6.md
+VALIDATION.md
+UPLOAD_AND_RUN.txt
+FINAL_GITHUB_KURULUM.txt
+YEREL_TAM_TEST_BASLAT.bat
+YEREL_CALISTIRMA_NOTU.txt
 ```
 
-**`data/` klasörünü silmeyin, değiştirmeyin veya eski paketle ezmeyin.** Böylece mevcut checkpoint korunur.
+**`data/` klasörünü silmeyin veya eski bir paketle ezmeyin.** v9.6 kodu mevcut checkpoint’i kendisi migrate eder.
 
-### Güncelleme Mimarisi
+### Uygulama Diyagramı
 
 ```mermaid
 flowchart TD
     A["Sadece değişen dosyalar paketi"] --> B["Repository köküne aynı yollarla yükle"]
-    B --> C["Kod / workflow / tests / README değişir"]
-    B --> D["data/ klasörü değişmez"]
-    D --> E["Mevcut checkpoint ve resmî JSON korunur"]
-    C --> F["Commit"]
-    E --> F
-    F --> G["Run workflow"]
+    B --> C["Kod / workflow / test / README güncellenir"]
+    B --> D["Mevcut data/ aynen kalır"]
+    C --> E["Commit"]
+    D --> E
+    E --> F["Actions → Run workflow"]
+    F --> G["v9.6 profil upgrade kuyruğu"]
 ```
 
-### Uygulama Akışı
+### Önerilen İlk Çalıştırma Ayarları
 
-1. GitHub'da değişen dosyaları commit edin.
-2. `Actions > YAT KAP Merkezi Veri Güncelleme > Run workflow` yolunu açın.
-3. İlk çalıştırmada varsayılanları koruyun:
-   - `batch_size: 60`
-   - `max_batches: 40`
-   - `cooldown_seconds: 180`
-   - `delay_seconds: 1.35`
-   - `tefas_start_delay_min: 15`
-   - `tefas_start_delay_max: 20`
-4. Workflow mevcut checkpoint'i okuyup eski parser ile eksik kalmış kayıtları öncelikli upgrade kuyruğuna alır.
-5. Her batch GitHub'a ayrıca commit edilir; yarıda kalsa sonraki çalışma kaldığı yerden devam eder.
-
-```mermaid
-flowchart TD
-    A["Run workflow"] --> B["pytest -q"]
-    B --> C{"Testler geçti mi?"}
-    C -- "Hayır" --> D["Workflow durur; data değişmez"]
-    C -- "Evet" --> E["Checkpoint yükle"]
-    E --> F["60 fonluk batch seç"]
-    F --> G["Tarama motorunu çalıştır"]
-    G --> H["data/ değişikliklerini commit et"]
-    H --> I["run_state oku"]
-    I --> J{"PUBLISHED veya COMPLETE_WITH_UNRESOLVED mı?"}
-    J -- "Evet" --> K["Workflow tamamlanır"]
-    J -- "Hayır" --> L["180 saniye soğuma"]
-    L --> F
+```text
+batch_size                  = 60
+max_batches                 = 15
+cooldown_seconds            = 180
+delay_seconds               = 1.35
+tefas_start_delay_min       = 15
+tefas_start_delay_max       = 20
+max_tefas_profile_attempts  = 3
 ```
+
+Alan adları `tefas_start_delay_*` olarak geriye dönük uyumluluk için korunmuştur; v9.6’da aynı limiter hem profil hem başlangıç POST’larını yönetir.
 
 ---
 
-## Durumlar
+## 14. Workflow Durumları
 
-- `IN_PROGRESS`: Kaldığı yerden devam edecek kayıtlar var.
+- `IN_PROGRESS`: Bekleyen batch, profil upgrade veya retry var.
 - `PUBLISHED`: Resmî JSON kalite eşiğini geçti ve güncellendi.
-- `COMPLETE_WITH_UNRESOLVED`: Kontrollü tekrar sınırı dolmuş birkaç kaynak problemi kaldı; diagnostics incelenmelidir.
-
-### Durum Akış Diyagramı
+- `COMPLETE_WITH_UNRESOLVED`: Retry sınırı dolmuş kaynak problemleri var.
 
 ```mermaid
 stateDiagram-v2
     [*] --> IN_PROGRESS
-    IN_PROGRESS --> IN_PROGRESS: Bekleyen batch / retry var
-    IN_PROGRESS --> PUBLISHED: Kalite eşiği geçti
-    IN_PROGRESS --> COMPLETE_WITH_UNRESOLVED: Retry sınırı doldu ve çözülmeyen kayıt var
+    IN_PROGRESS --> IN_PROGRESS: Batch / profil upgrade / retry devam ediyor
+    IN_PROGRESS --> PUBLISHED: Tüm kalite eşikleri geçti
+    IN_PROGRESS --> COMPLETE_WITH_UNRESOLVED: Kuyruk bitti fakat kalite eşiği karşılanmadı
     PUBLISHED --> [*]
     COMPLETE_WITH_UNRESOLVED --> [*]
 ```
 
 ---
 
-## Public Adres
+## 15. Public Adres
 
 ```text
 https://raw.githubusercontent.com/GITHUB_KULLANICI_ADI/REPO_ADI/main/data/yat_fund_enrichment.json
 ```
 
-### Public Veri Akışı
-
 ```mermaid
 flowchart LR
-    A["KAP/TEFAS kaynakları"] --> B["Tarama ve doğrulama"]
+    A["KAP + TEFAS kaynakları"] --> B["v9.6 tarama ve doğrulama"]
     B --> C["Kalite kontrolü"]
     C --> D["data/yat_fund_enrichment.json"]
     D --> E["GitHub Raw URL"]
-    E --> F["Dashboard / uygulama / rapor tüketicileri"]
+    E --> F["Fon dashboard / uygulama / rapor"]
 ```
-
-Public URL yalnız `PUBLISHED` durumunda güncellenen resmî JSON'u sunar. Staging ve diagnostics dosyaları public veri sözleşmesinin parçası değildir.
 
 ---
 
-## Windows Yerel Tam Tarama
+## 16. Windows Yerel Çalıştırma
 
-`YEREL_TAM_TEST_BASLAT.bat`, GitHub ile aynı `scripts/update_yat_kap_data.py` motorunu kullanır. Mevcut data checkpoint'i korunarak devam eder. Eski bağımsız Playwright/Tesseract test paketleri ana repoya eklenmemelidir.
-
-### Yerel Çalışma Mimarisi
-
-```mermaid
-flowchart TD
-    A["YEREL_TAM_TEST_BASLAT.bat"] --> B["scripts/update_yat_kap_data.py"]
-    B --> C["Aynı parser ve fallback kuralları"]
-    C --> D["Mevcut data/staging checkpoint"]
-    D --> E["Yerel batch taraması"]
-    E --> F["Aynı run_state / diagnostics / public kalite kuralları"]
-```
-
-### Yerel ve GitHub Motor Uyumu
+`YEREL_TAM_TEST_BASLAT.bat`, GitHub workflow ile aynı `scripts/update_yat_kap_data.py` motorunu kullanır.
 
 ```mermaid
 flowchart LR
-    A["Windows yerel BAT"] --> C["update_yat_kap_data.py"]
-    B["GitHub Actions workflow"] --> C
+    A["Windows BAT"] --> C["update_yat_kap_data.py"]
+    B["GitHub Actions"] --> C
     C --> D["kap_yat_source.py"]
-    C --> E["tefas_start_year_source.py"]
-    C --> F["Kalıcı data dosyaları"]
+    C --> E["tefas_profile_source.py"]
+    C --> F["tefas_start_year_source.py"]
+    C --> G["Kalıcı data checkpoint"]
 ```
 
-Bu yapı sayesinde yerel testte doğrulanan kural ile GitHub workflow'da çalışan kural aynı kalır.
+Yerel çalıştırma da mevcut `data/staging/yat_kap_progress.json` dosyasından devam eder. Playwright, OCR veya Tesseract üretim motorunun parçası değildir.

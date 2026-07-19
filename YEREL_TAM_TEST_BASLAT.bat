@@ -1,10 +1,10 @@
-﻿@echo off
+@echo off
 setlocal EnableExtensions EnableDelayedExpansion
 chcp 65001 >nul
 cd /d "%~dp0"
 
 echo ============================================================
-echo PIYASA NABZI YAT/KAP v2.1 - YEREL TAM TARAMA
+echo PIYASA NABZI YAT/KAP v2.6 / v9.6 - YEREL TAM TARAMA
 echo Klasor: %CD%
 echo ============================================================
 echo.
@@ -33,22 +33,27 @@ if errorlevel 1 (
 echo.
 echo Ayarlar:
 echo - Batch boyutu: 60 fon
-echo - Istek araligi: 1.35 saniye
-echo - Her 65 istekte: 180 saniye mola
-echo - En fazla: 40 batch
+echo - KAP istek araligi: 1.35 saniye
+echo - TEFAS profil/baslangic araligi: 15-20 saniye
+echo - TEFAS profil teknik retry: 3
+echo - Her 65 KAP isteginde: 180 saniye mola
+echo - En fazla: 15 batch
 echo - Kayit: Her fondan sonra data/staging altina
 echo.
 
-for /L %%B in (1,1,40) do (
+for /L %%B in (1,1,15) do (
     echo ============================================================
-    echo BATCH %%B / 40 BASLIYOR
+    echo BATCH %%B / 15 BASLIYOR
     echo ============================================================
 
     %PYTHON% scripts\update_yat_kap_data.py ^
       --batch-size 60 ^
       --delay 1.35 ^
       --routine-request-limit 65 ^
-      --routine-cooldown-seconds 180
+      --routine-cooldown-seconds 180 ^
+      --tefas-start-delay-min 15 ^
+      --tefas-start-delay-max 20 ^
+      --max-tefas-profile-attempts 3
 
     if errorlevel 1 (
         echo.
@@ -66,12 +71,15 @@ for /L %%B in (1,1,40) do (
     if /I "!RUN_STATUS!"=="PUBLISHED" goto :DONE
     if /I "!RUN_STATUS!"=="COMPLETE_WITH_UNRESOLVED" goto :UNRESOLVED
 
-    echo Sonraki batch'e geciliyor...
+    if %%B LSS 15 (
+        echo Sonraki batch oncesi 180 saniye koruma molasi...
+        timeout /t 180 /nobreak >nul
+    )
     echo.
 )
 
 echo.
-echo 40 batch sinirina ulasildi.
+echo 15 batch sinirina ulasildi.
 echo data\run_state.json dosyasini kontrol edin.
 pause
 exit /b 0
@@ -81,7 +89,7 @@ echo.
 echo ============================================================
 echo TAMAMLANDI: Resmi veri yayinlandi.
 echo data\yat_fund_enrichment.json
- echo ============================================================
+echo ============================================================
 pause
 exit /b 0
 

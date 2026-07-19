@@ -1,0 +1,46 @@
+PIYASA NABZI YAT/KAP v2.6 / v9.6 — GITHUB YÜKLEME PAKETİ
+================================================================
+
+ÖNERİLEN KULLANIM
+-----------------
+Bu klasörün içeriğini mevcut repository köküne aynı klasör yollarıyla yükleyin.
+Aynı isimli dosyaları değiştirin.
+
+ÇOK ÖNEMLİ
+----------
+Bu pakette data/ klasörü yoktur. Mevcut GitHub data/ klasörünü silmeyin veya
+başka bir eski data paketiyle ezmeyin. v9.6 mevcut checkpoint'i otomatik migrate eder.
+
+YÜKLENECEK DOSYALAR
+-------------------
+.github/workflows/update-yat-kap-data.yml
+scripts/kap_yat_source.py
+scripts/update_yat_kap_data.py
+scripts/tefas_profile_source.py
+scripts/tefas_start_year_source.py
+tests/test_parser.py
+requirements.txt
+README.md
+CHANGES_v2.6_v9.6.md
+VALIDATION.md
+UPLOAD_AND_RUN.txt
+FINAL_GITHUB_KURULUM.txt
+YEREL_TAM_TEST_BASLAT.bat
+YEREL_CALISTIRMA_NOTU.txt
+
+İLK WORKFLOW AYARLARI
+---------------------
+batch_size                  = 60
+max_batches                 = 15
+cooldown_seconds            = 180
+delay_seconds               = 1.35
+tefas_start_delay_min       = 15
+tefas_start_delay_max       = 20
+max_tefas_profile_attempts  = 3
+
+TEFAS KURALLARI
+---------------
+Risk: KAP HTML > KAP PDF > TEFAS toplu riskDegeri > TEFAS profil riskDegeri.
+İşlem: TEFAS profil tefasDurum birincil; getFplFonList doğrulama; KAP çatışması saklanır.
+AKTİF=AÇIK, PASİF=KAPALI, TEFAS'ta işlem görüyor=AÇIK,
+TEFAS'ta işlem görmüyor=KAPALI.

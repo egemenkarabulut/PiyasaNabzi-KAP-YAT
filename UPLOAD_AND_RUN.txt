@@ -1,36 +1,48 @@
-PIYASA NABZI YAT/KAP — YÜKLEME VE İLK ÇALIŞTIRMA
-==================================================
+PIYASA NABZI YAT/KAP — v2.6 / v9.6 YÜKLEME VE İLK ÇALIŞTIRMA
+================================================================
 
-1. ZIP içindeki repository klasörünün TÜM içeriğini mevcut GitHub repository'nizin
-   kök dizinine yükleyin ve aynı isimli dosyaları değiştirin.
+1. Değişen dosyaları mevcut GitHub repository'nizin kök dizinine aynı klasör
+   yollarıyla yükleyin ve aynı isimli dosyaları değiştirin.
 
-2. Özellikle şu yeni/yenilenen dosyaların yüklendiğini kontrol edin:
+2. data/ klasörünü SİLMEYİN ve eski paketle EZMEYİN.
+   Mevcut 2.138 kayıt v9.6 tarafından otomatik migrate edilir.
+
+3. Özellikle şu dosyaların yüklendiğini kontrol edin:
    - scripts/kap_yat_source.py
    - scripts/update_yat_kap_data.py
+   - scripts/tefas_profile_source.py
+   - scripts/tefas_start_year_source.py
+   - tests/test_parser.py
    - .github/workflows/update-yat-kap-data.yml
-   - data/staging/yat_kap_progress.json
-   - data/diagnostics/request_failures.json
-   - data/run_state.json
+   - README.md
+   - CHANGES_v2.6_v9.6.md
 
-3. GitHub > Settings > Actions > General > Workflow permissions bölümünde
+4. GitHub > Settings > Actions > General > Workflow permissions bölümünde
    "Read and write permissions" açık olmalıdır.
 
-4. Actions > YAT KAP Merkezi Veri Güncelleme > Run workflow.
+5. Actions > YAT KAP Merkezi Veri Güncelleme > Run workflow.
 
-5. İlk gece testi için varsayılanları değiştirmeyin:
-   batch_size = 60
-   max_batches = 40
-   cooldown_seconds = 180
-   delay_seconds = 1.35
+6. İlk çalışma için varsayılanlar:
+   batch_size                  = 60
+   max_batches                 = 15
+   cooldown_seconds            = 180
+   delay_seconds               = 1.35
+   tefas_start_delay_min       = 15
+   tefas_start_delay_max       = 20
+   max_tefas_profile_attempts  = 3
 
-6. Workflow her batch sonunda veriyi GitHub'a commit eder. Tarama yarıda kesilse bile
-   data/staging/yat_kap_progress.json içindeki kayıtlar kaybolmaz.
+7. tefas_start_delay_* isimleri geriye dönük uyumluluk için korunmuştur.
+   v9.6'da aynı 15–20 saniyelik limiter profil ve başlangıç POST'larını yönetir.
 
-7. Sabah kontrol edilecek dosyalar:
+8. Workflow her batch sonunda data/ değişikliklerini commit eder. Çalışma yarıda
+   kesilse bile data/staging/yat_kap_progress.json içindeki kayıtlar korunur.
+
+9. Kontrol edilecek dosyalar:
    - data/run_state.json
    - data/staging/yat_kap_progress.json
    - data/staging/failed_codes.json
    - data/diagnostics/request_failures.json
+   - data/diagnostics/tefas_profile_events.jsonl
    - data/yat_fund_enrichment.json
 
-Run state PUBLISHED ise resmî JSON başarıyla oluşturulmuştur.
+Run state PUBLISHED ise resmî JSON başarıyla güncellenmiştir.

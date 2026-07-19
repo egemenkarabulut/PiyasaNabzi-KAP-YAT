@@ -1,0 +1,21 @@
+PIYASA NABZI YAT/KAP v2.6 / v9.6 — DOĞRULAMA RAPORU
+=====================================================
+
+Python syntax / compileall       : BAŞARILI
+Pytest                           : 35/35 BAŞARILI
+GitHub Actions YAML              : BAŞARILI
+Mevcut checkpoint yükleme        : 2.138 / 2.138 BAŞARILI
+Mevcut attempt sayaçları         : 2.138 / 2.138 BAŞARILI
+v9.6 profil-upgrade kuyruğu      : 2.138 kayıt BAŞARILI
+Mevcut data/ dosya hashleri      : DEĞİŞMEDİ
+TEFAS toplu canlı test snapshot  : 2.138 satır BAŞARILI
+
+Canlı fixture doğrulaması:
+- BCK: eski KAPALI → TEFAS profil AÇIK + liste EVET → nihai AÇIK, ÇATIŞMA saklandı.
+- TLY: risk 7, işlem AÇIK, KAP↔TEFAS EŞLEŞİYOR.
+- BCK riskDegeri null → risk uydurulmadı.
+
+Şema:
+- Publisher: github-resumable-v2.6-v9.6
+- Source engine: v9.6-tefas-profile-risk-trade-1
+- Schema version: 3

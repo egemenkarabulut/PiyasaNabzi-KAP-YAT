@@ -1,7 +1,9 @@
-YEREL TAM TARAMA
-================
-1. ZIP dosyasini yeni bir klasore cikarin.
-2. YEREL_TAM_TEST_BASLAT.bat dosyasina cift tiklayin.
-3. Program her fondan sonra data/staging/yat_kap_progress.json dosyasini gunceller.
-4. Kapatilirsa tekrar baslatildiginda kaldigi yerden devam eder.
-5. Nihai veri data/yat_fund_enrichment.json dosyasina yalniz kalite kontrolu gecince yazilir.
+YEREL TAM TARAMA — v2.6 / v9.6
+================================
+1. ZIP dosyasını yeni bir klasöre çıkarın.
+2. Mevcut data/ klasörünü koruyun.
+3. YEREL_TAM_TEST_BASLAT.bat dosyasına çift tıklayın.
+4. Program her fondan sonra data/staging/yat_kap_progress.json dosyasını günceller.
+5. Kapatılırsa tekrar başlatıldığında kaldığı yerden devam eder.
+6. TEFAS profil ve başlangıç istekleri 15–20 saniyelik ortak limiter kullanır.
+7. Nihai veri yalnız kalite kontrolü geçince data/yat_fund_enrichment.json dosyasına yazılır.
