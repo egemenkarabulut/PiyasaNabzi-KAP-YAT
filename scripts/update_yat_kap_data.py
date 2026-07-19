@@ -13,6 +13,8 @@ from __future__ import annotations
 import argparse
 import json
 import os
+
+import requests
 from dataclasses import asdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -38,13 +40,14 @@ from tefas_profile_source import (
     TefasApiRateLimiter,
     TefasBulkFundRow,
     TefasProfileResult,
+    bulk_list_trade_decision,
     fetch_tefas_bulk_snapshot,
     fetch_tefas_profile,
     resolve_risk,
     resolve_trade_status,
 )
 
-PUBLISHER_VERSION = "github-resumable-v2.6-v9.6"
+PUBLISHER_VERSION = "github-resumable-v2.7-v9.6-optimized"
 SCHEMA_VERSION = 3
 
 DATA_DIR = Path("data")
@@ -71,7 +74,6 @@ DEFAULT_TEFAS_START_DELAY_MAX = 20.0
 MIN_EXPECTED_FUNDS = 2000
 MIN_VALID_PAGE_RATIO = 0.98
 MIN_KNOWN_TRADE_RATIO = 0.98
-MIN_TEFAS_PROFILE_RATIO = 0.98
 
 
 def utc_now() -> datetime:
@@ -226,10 +228,13 @@ def is_tefas_profile_complete(result: FundResult | None) -> bool:
 
 
 def needs_tefas_profile_upgrade(result: FundResult | None) -> bool:
-    if result is None:
-        return False
-    status = normalize_text(result.tefas_profile_api_status).upper()
-    return status in {"", "—", "NOT_CHECKED"} or not normalize_text(result.tefas_profile_checked_at)
+    """Eski kayıtların tamamını yalnız yeni profil alanı yok diye kuyruğa almaz.
+
+    v2.6'da bu kural 2.134 aktif kaydın tamamını yeniden taramıştı. v2.7'de
+    toplu TEFAS JSON + canlı işlem listesi önce uygulanır; tekil profil sadece
+    belirsiz/çelişkili kayıtlar için çağrılır.
+    """
+    return False
 
 
 def needs_tefas_profile_retry(
@@ -238,11 +243,38 @@ def needs_tefas_profile_retry(
 ) -> bool:
     if not result:
         return False
-    status = normalize_text(result.tefas_profile_api_status).upper()
+    status = normalize_text(result.tefas_profile_api_status).upper() or "NOT_CHECKED"
+    allowed_status = status in PROFILE_RETRYABLE_STATUSES or status in {"NOT_CHECKED", "—"}
+    if not allowed_status:
+        return False
+    if int(result.tefas_profile_attempt_count or 0) >= max_tefas_profile_attempts:
+        return False
     return bool(
-        status in PROFILE_RETRYABLE_STATUSES
-        and int(result.tefas_profile_attempt_count or 0) < max_tefas_profile_attempts
+        result.tefas_internal_conflict == "EVET"
+        or not is_known_trade(result)
+        or (is_missing(result.risk_level) and is_missing(result.tefas_bulk_risk_raw))
     )
+
+
+def needs_kap_work(
+    result: FundResult | None,
+    attempt_count: int,
+    *,
+    refresh_days: int,
+    max_field_attempts: int,
+    max_technical_attempts: int,
+) -> bool:
+    if result is None:
+        return True
+    if needs_technical_retry(result) and attempt_count < max_technical_attempts:
+        return True
+    if needs_tefas_start_retry(result) and attempt_count < max_technical_attempts:
+        return True
+    if needs_field_retry(result) and attempt_count < max_field_attempts:
+        return True
+    if needs_parser_upgrade_retry(result, attempt_count, max_field_attempts):
+        return True
+    return is_stale(result, refresh_days)
 
 
 def choose_batch(
@@ -259,7 +291,6 @@ def choose_batch(
     unattempted: list[str] = []
     technical: list[str] = []
     tefas_profile_retry: list[str] = []
-    tefas_profile_upgrade: list[str] = []
     tefas_start_retry: list[str] = []
     incomplete: list[str] = []
     parser_upgrade: list[str] = []
@@ -272,27 +303,26 @@ def choose_batch(
             unattempted.append(code)
         elif needs_technical_retry(result) and count < max_technical_attempts:
             technical.append(code)
-        elif needs_tefas_profile_retry(result, max_tefas_profile_attempts):
-            tefas_profile_retry.append(code)
-        elif needs_tefas_profile_upgrade(result):
-            tefas_profile_upgrade.append(code)
         elif needs_tefas_start_retry(result) and count < max_technical_attempts:
             tefas_start_retry.append(code)
         elif needs_field_retry(result) and count < max_field_attempts:
             incomplete.append(code)
         elif needs_parser_upgrade_retry(result, count, max_field_attempts):
             parser_upgrade.append(code)
+        elif needs_tefas_profile_retry(result, max_tefas_profile_attempts):
+            tefas_profile_retry.append(code)
         elif is_stale(result, refresh_days):
             stale.append(code)
 
+    # Eski KAP çalışma sırası korunur. Profil retry yalnız gerçekten gerekli
+    # kayıtlar için, KAP alanı kuyruklarından sonra çalışır.
     ordered = (
         unattempted
         + technical
-        + tefas_profile_retry
-        + tefas_profile_upgrade
         + tefas_start_retry
         + incomplete
         + parser_upgrade
+        + tefas_profile_retry
         + stale
     )
     selected = ordered[: max(1, batch_size)]
@@ -300,7 +330,7 @@ def choose_batch(
         "unattempted": len(unattempted),
         "technical_retryable": len(technical),
         "tefas_profile_retryable": len(tefas_profile_retry),
-        "tefas_profile_upgrade": len(tefas_profile_upgrade),
+        "tefas_profile_upgrade": 0,
         "tefas_start_retryable": len(tefas_start_retry),
         "field_retryable": len(incomplete),
         "parser_upgrade_retryable": len(parser_upgrade),
@@ -308,15 +338,16 @@ def choose_batch(
         "pending_total": len(ordered),
     }
 
+
 def apply_tefas_enrichment(
     base: FundResult,
-    profile: TefasProfileResult,
+    profile: TefasProfileResult | None,
     bulk_row: TefasBulkFundRow | None,
     *,
     tefas_traded_row: dict[str, str] | None,
     tefas_list_error: str,
 ) -> FundResult:
-    """KAP/PDF sonucuna TEFAS profil risk ve işlem doğrulamasını uygular."""
+    """Mevcut KAP/PDF sonucuna toplu TEFAS ve gerektiğinde profil ekler."""
     data = asdict(base)
 
     kap_status = normalize_text(base.kap_transaction_status).upper()
@@ -340,29 +371,37 @@ def apply_tefas_enrichment(
     data["kap_transaction_evidence"] = kap_evidence or "—"
     data["kap_transaction_confidence"] = kap_confidence or "YOK"
 
-    requested = profile.status != "BLOCKED_SKIPPED"
-    data["tefas_profile_attempt_count"] = int(base.tefas_profile_attempt_count or 0) + (1 if requested else 0)
-    data["tefas_profile_checked_at"] = profile.checked_at
-    data["tefas_profile_api_status"] = profile.status
-    data["tefas_profile_http_status"] = profile.http_status
-    data["tefas_profile_error"] = profile.error
-    data["tefas_profile_fund_name"] = profile.fund_name or "—"
-    data["tefas_profile_isin"] = profile.isin_code or "—"
-    data["tefas_profile_kap_link"] = profile.kap_link or "—"
-    data["tefas_status_raw"] = profile.status_raw or "—"
-    data["tefas_status_normalized"] = profile.status_normalized
+    profile_api_status = normalize_text(base.tefas_profile_api_status).upper() or "NOT_CHECKED"
+    profile_status_raw = "" if is_missing(base.tefas_status_raw) else normalize_text(base.tefas_status_raw)
+    profile_status_normalized = normalize_text(base.tefas_status_normalized).upper() or "KONTROL"
+    profile_risk_raw = "" if is_missing(base.tefas_profile_risk_raw) else normalize_text(base.tefas_profile_risk_raw)
+
+    if profile is not None:
+        requested = profile.status != "BLOCKED_SKIPPED"
+        data["tefas_profile_attempt_count"] = int(base.tefas_profile_attempt_count or 0) + (1 if requested else 0)
+        data["tefas_profile_checked_at"] = profile.checked_at
+        data["tefas_profile_api_status"] = profile.status
+        data["tefas_profile_http_status"] = profile.http_status
+        data["tefas_profile_error"] = profile.error
+        data["tefas_profile_fund_name"] = profile.fund_name or "—"
+        data["tefas_profile_isin"] = profile.isin_code or "—"
+        data["tefas_profile_kap_link"] = profile.kap_link or "—"
+        data["tefas_status_raw"] = profile.status_raw or "—"
+        data["tefas_status_normalized"] = profile.status_normalized
+        profile_api_status = profile.status
+        profile_status_raw = profile.status_raw
+        profile_status_normalized = profile.status_normalized
+        profile_risk_raw = profile.risk_raw
 
     data["tefas_bulk_status_raw"] = (bulk_row.status_raw if bulk_row else "") or "—"
-    data["tefas_bulk_status_normalized"] = (
-        bulk_row.status_normalized if bulk_row else "KONTROL"
-    )
+    data["tefas_bulk_status_normalized"] = bulk_row.status_normalized if bulk_row else "KONTROL"
 
     risk = resolve_risk(
         kap_risk=base.risk_level,
         kap_source=base.risk_source,
         kap_evidence=base.risk_evidence,
         kap_confidence=base.risk_confidence,
-        profile_risk_raw=profile.risk_raw,
+        profile_risk_raw=profile_risk_raw,
         bulk_risk_raw=(bulk_row.risk_raw if bulk_row else ""),
     )
     data["risk_level"] = risk.final_value
@@ -383,16 +422,17 @@ def apply_tefas_enrichment(
     data["risk_conflict_flag"] = risk.conflict_flag
 
     traded_row = tefas_traded_row or {}
-    list_match = (
-        "HATA" if tefas_list_error else ("EVET" if tefas_traded_row else "HAYIR")
-    )
+    list_match = "HATA" if tefas_list_error else ("EVET" if tefas_traded_row else "HAYIR")
     list_status_raw = normalize_text(traded_row.get("durum"))
     trade = resolve_trade_status(
         kap_status=kap_status,
         kap_source=kap_source,
         kap_evidence=kap_evidence,
-        profile_status_raw=profile.status_raw,
-        profile_status_normalized=profile.status_normalized,
+        profile_status_raw=profile_status_raw,
+        profile_status_normalized=profile_status_normalized,
+        profile_api_status=profile_api_status,
+        bulk_status_raw=(bulk_row.status_raw if bulk_row else ""),
+        bulk_status_normalized=(bulk_row.status_normalized if bulk_row else "KONTROL"),
         traded_list_match=list_match,
         traded_list_status_raw=list_status_raw,
         traded_list_error=tefas_list_error,
@@ -411,11 +451,83 @@ def apply_tefas_enrichment(
     data["tefas_traded_list_date"] = normalize_text(traded_row.get("tarih")) or "—"
 
     parse_method = normalize_text(base.parse_method)
-    if "TEFAS_PROFILE_JSON" not in parse_method:
-        parse_method = normalize_text(parse_method + " + TEFAS_PROFILE_JSON + TEFAS_BULK_RISK_JSON")
+    if bulk_row is not None and "TEFAS_BULK_RISK_JSON" not in parse_method:
+        parse_method = normalize_text(parse_method + " + TEFAS_BULK_RISK_JSON")
+    if profile is not None and "TEFAS_PROFILE_JSON" not in parse_method:
+        parse_method = normalize_text(parse_method + " + TEFAS_PROFILE_JSON")
     data["parse_method"] = parse_method
     return FundResult(**data)
 
+
+def apply_bulk_fast_pass(
+    progress: dict[str, FundResult],
+    all_codes: list[str],
+    bulk_rows: dict[str, TefasBulkFundRow],
+    tefas_traded: dict[str, dict[str, str]],
+    tefas_error: str,
+) -> int:
+    """Mevcut kayıtları KAP sayfasını açmadan tek toplu TEFAS cevabıyla günceller."""
+    updated = 0
+    for code in all_codes:
+        base = progress.get(code)
+        if base is None:
+            continue
+        enriched = apply_tefas_enrichment(
+            base,
+            None,
+            bulk_rows.get(code),
+            tefas_traded_row=tefas_traded.get(code),
+            tefas_list_error=tefas_error,
+        )
+        if asdict(enriched) != asdict(base):
+            progress[code] = enriched
+            updated += 1
+    return updated
+
+
+def profile_request_required(
+    result: FundResult,
+    bulk_row: TefasBulkFundRow | None,
+    *,
+    tefas_traded_row: dict[str, str] | None,
+    tefas_list_error: str,
+    max_tefas_profile_attempts: int,
+) -> bool:
+    status = normalize_text(result.tefas_profile_api_status).upper()
+    if status == "API_OK":
+        return False
+    if int(result.tefas_profile_attempt_count or 0) >= max_tefas_profile_attempts:
+        return False
+
+    list_match = "HATA" if tefas_list_error else ("EVET" if tefas_traded_row else "HAYIR")
+    list_status_raw = normalize_text((tefas_traded_row or {}).get("durum"))
+    decisive, _, _ = bulk_list_trade_decision(
+        bulk_status_normalized=(bulk_row.status_normalized if bulk_row else "KONTROL"),
+        traded_list_match=list_match,
+        traded_list_status_raw=list_status_raw,
+        traded_list_error=tefas_list_error,
+    )
+    if decisive:
+        return False
+
+    # Tekil profil yalnız işlem durumu toplu kaynaklarda belirsiz/çelişkiliyse
+    # veya KAP/PDF+toplu risk kaynaklarının tümü boşsa çağrılır.
+    return bool(
+        not is_known_trade(result)
+        or result.tefas_internal_conflict == "EVET"
+        or (is_missing(result.risk_level) and (bulk_row is None or bulk_row.risk_value is None))
+    )
+
+
+def format_profile_log(profile: TefasProfileResult | None, result: FundResult) -> str:
+    if profile is None:
+        source = normalize_text(result.transaction_source)
+        if source.startswith(("TEFAS_BULK", "TEFAS:getFplFonList")):
+            return "Profil GEREKMEDİ — Toplu+Liste Doğruladı"
+        return "Profil GEREKMEDİ — Mevcut KAP Değeri Korundu"
+    if profile.status in PROFILE_RETRYABLE_STATUSES:
+        return f"Profil {profile.status} — Mevcut KAP Değeri Korundu"
+    return f"Profil {profile.status}/{profile.http_status or '—'}"
 
 def append_attempt_event(result: FundResult, attempt_count: int) -> None:
     ATTEMPT_EVENTS_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -538,6 +650,13 @@ def public_record(result: FundResult, attempts: int) -> dict[str, Any]:
     page_valid = is_valid_page(result)
     trade_status = result.transaction_status if trade_known else "KONTROL"
     profile_complete = is_tefas_profile_complete(result)
+    transaction_source = normalize_text(result.transaction_source)
+    tefas_verification = (
+        "PROFILE_CHECKED" if profile_complete else
+        "BULK_AND_LIST_CONFIRMED" if transaction_source.startswith("TEFAS_BULK") else
+        "LIST_CONFIRMED" if transaction_source.startswith("TEFAS:getFplFonList") else
+        "NOT_REQUIRED_OR_PENDING"
+    )
     return {
         "fund_code": result.fund_code,
         "fund_name": result.fund_name,
@@ -578,7 +697,7 @@ def public_record(result: FundResult, attempts: int) -> dict[str, Any]:
             "start_year": "FOUND" if not start_missing else "SOURCE_NOT_FOUND",
             "risk_level": "FOUND" if not risk_missing else "SOURCE_NOT_PUBLISHED",
             "trade_status": "FOUND" if trade_known else "UNRESOLVED",
-            "tefas_profile": "CHECKED" if profile_complete else "PENDING_OR_ERROR",
+            "tefas_verification": tefas_verification,
             "failure_category": failure_category(result),
         },
     }
@@ -614,7 +733,6 @@ def diagnostics(
             category = failure_category(result)
             retryable = (
                 (needs_technical_retry(result) and count < max_technical_attempts)
-                or needs_tefas_profile_upgrade(result)
                 or needs_tefas_profile_retry(result, max_tefas_profile_attempts)
                 or (needs_tefas_start_retry(result) and count < max_technical_attempts)
                 or (needs_field_retry(result) and count < max_field_attempts)
@@ -676,6 +794,11 @@ def publish_if_ready(
     valid_ratio = valid_pages / total if total else 0.0
     trade_ratio = known_trade / total if total else 0.0
     tefas_profile_ratio = tefas_profile_checked / total if total else 0.0
+    tefas_confirmed_trade = sum(
+        normalize_text(item.transaction_source).startswith(("TEFAS_PROFILE", "TEFAS_BULK", "TEFAS:getFplFonList"))
+        for item in available
+    )
+    tefas_confirmed_trade_ratio = tefas_confirmed_trade / total if total else 0.0
 
     ready = bool(
         pending_total == 0
@@ -683,7 +806,6 @@ def publish_if_ready(
         and coverage_ratio == 1.0
         and valid_ratio >= MIN_VALID_PAGE_RATIO
         and trade_ratio >= MIN_KNOWN_TRADE_RATIO
-        and tefas_profile_ratio >= MIN_TEFAS_PROFILE_RATIO
     )
     metrics = {
         "total_kap_yf_count": total,
@@ -695,6 +817,8 @@ def publish_if_ready(
         "known_trade_ratio": round(trade_ratio, 6),
         "tefas_profile_checked_count": tefas_profile_checked,
         "tefas_profile_checked_ratio": round(tefas_profile_ratio, 6),
+        "tefas_confirmed_trade_count": tefas_confirmed_trade,
+        "tefas_confirmed_trade_ratio": round(tefas_confirmed_trade_ratio, 6),
         "tefas_traded_count": tefas_traded_count,
         "pending_total": pending_total,
     }
@@ -730,7 +854,7 @@ def publish_if_ready(
             "fund_name": "KAP aktif YF/Y ana listesindeki resmî fon adı",
             "start_year": "KAP Genel Bilgiler > KAP Yatırımcı Bilgi Formu PDF > TEFAS 60 ay JSON en eski geçerli tarih; fiyat 0 olabilir; 20 gün sınır koruması",
             "risk_level": "KAP HTML > KAP PDF > TEFAS toplu riskDegeri > TEFAS profil riskDegeri; yalnız doğrulanmış 1-7 kabul; null/boş/- eksik bırakılır",
-            "trade_status": "TEFAS profil tefasDurum birincil nihai TEFAS kaynağı; getFplFonList doğrulama; KAP çatışması ve önceki kanıt ayrıca saklanır",
+            "trade_status": "TEFAS profil tefasDurum varsa birincil; profil gerekmiyorsa toplu tefasDurum + getFplFonList; yalnız belirsiz/çelişkili kayıtta tekil profil; KAP çatışması saklanır",
         },
         "funds": records,
     }
@@ -757,6 +881,32 @@ def run_batch(args: argparse.Namespace) -> dict[str, Any]:
         print(f"UYARI: TEFAS işlem listesi alınamadı: {tefas_error}")
 
     progress, attempts = load_progress()
+    current_codes = set(all_codes)
+    checkpoint_codes = set(progress)
+    inactive_checkpoint_codes = sorted(checkpoint_codes - current_codes)
+    new_kap_codes = sorted(current_codes - checkpoint_codes)
+
+    # Tek bir TEFAS oturumu kullanılır. v2.6'daki her fon için yeni Session açma
+    # davranışı kaldırılmıştır; bu, geçici bağlantı hatalarını azaltır.
+    tefas_session = requests.Session()
+    bulk_snapshot = fetch_tefas_bulk_snapshot(
+        session=tefas_session,
+        raw_path=TEFAS_BULK_RAW_PATH,
+    )
+    bulk_rows = bulk_snapshot.rows
+    print(
+        f"TEFAS toplu risk/durum: {bulk_snapshot.status} | "
+        f"HTTP {bulk_snapshot.http_status or '—'} | Satır {bulk_snapshot.row_count}"
+    )
+
+    bulk_updated = apply_bulk_fast_pass(
+        progress,
+        all_codes,
+        bulk_rows,
+        tefas_traded,
+        tefas_error,
+    )
+
     selected_codes, queue_counts_before = choose_batch(
         all_codes,
         progress,
@@ -772,15 +922,15 @@ def run_batch(args: argparse.Namespace) -> dict[str, Any]:
         f"KAP YF/Y: {len(all_codes)} | Kayıtlı: {len(progress)} | "
         f"Bu batch: {len(selected_codes)} | Bekleyen: {queue_counts_before['pending_total']}"
     )
-
-    bulk_snapshot = None
-    if selected_codes:
-        bulk_snapshot = fetch_tefas_bulk_snapshot(raw_path=TEFAS_BULK_RAW_PATH)
-        print(
-            f"TEFAS toplu risk: {bulk_snapshot.status} | "
-            f"HTTP {bulk_snapshot.http_status or '—'} | Satır {bulk_snapshot.row_count}"
-        )
-    bulk_rows = bulk_snapshot.rows if bulk_snapshot is not None else {}
+    print(
+        f"Liste farkı: Yeni KAP kodu {len(new_kap_codes)} | "
+        f"Checkpoint'te olup güncel aktif KAP listesinde olmayan {len(inactive_checkpoint_codes)}"
+    )
+    if inactive_checkpoint_codes:
+        print("Güncel aktif listede olmayan korunan kodlar: " + ", ".join(inactive_checkpoint_codes))
+    print(
+        f"Toplu TEFAS hızlı geçişi: {bulk_updated} mevcut kayıt KAP sayfası açılmadan güncellendi."
+    )
 
     kap_limiter = GlobalRateLimiter(
         args.delay,
@@ -788,29 +938,64 @@ def run_batch(args: argparse.Namespace) -> dict[str, Any]:
         routine_cooldown_seconds=args.routine_cooldown_seconds,
     )
     # Profil ve 60 aylık başlangıç POST'ları aynı güvenli TEFAS sırasını paylaşır.
+    # 15-20 saniye, iki TEFAS isteğinin başlangıç zamanları arasındaki aralıktır.
     tefas_api_limiter = TefasApiRateLimiter(
         args.tefas_start_delay_min,
         args.tefas_start_delay_max,
     )
 
+    profile_requests_sent = 0
+    kap_detail_scans = 0
+    kap_detail_skipped = 0
+
     for index, code in enumerate(selected_codes, start=1):
         fund = funds_by_code[code]
-        profile = fetch_tefas_profile(
-            code,
-            rate_limiter=tefas_api_limiter,
-            raw_path=TEFAS_PROFILE_RAW_DIR / f"{code}_FON_PROFIL_RAW.json",
+        previous = progress.get(code)
+        previous_attempt_count = attempts.get(code, 0)
+        kap_required = needs_kap_work(
+            previous,
+            previous_attempt_count,
+            refresh_days=args.refresh_days,
+            max_field_attempts=args.max_field_attempts,
+            max_technical_attempts=args.max_technical_attempts,
         )
-        current = test_one_fund(
-            fund,
-            {},
-            tefas_traded,
-            tefas_error,
-            kap_limiter,
-            False,
-            tefas_api_limiter,
-        )
-        attempts[code] = attempts.get(code, 0) + 1
-        base = merge_results(progress.get(code), current)
+
+        current: FundResult | None = None
+        if kap_required:
+            current = test_one_fund(
+                fund,
+                {},
+                tefas_traded,
+                tefas_error,
+                kap_limiter,
+                False,
+                tefas_api_limiter,
+            )
+            attempts[code] = previous_attempt_count + 1
+            base = merge_results(previous, current)
+            kap_detail_scans += 1
+        else:
+            if previous is None:
+                raise RuntimeError(f"{code}: KAP taraması atlandı ancak checkpoint kaydı yok.")
+            base = previous
+            kap_detail_skipped += 1
+
+        profile: TefasProfileResult | None = None
+        if profile_request_required(
+            base,
+            bulk_rows.get(code),
+            tefas_traded_row=tefas_traded.get(code),
+            tefas_list_error=tefas_error,
+            max_tefas_profile_attempts=args.max_tefas_profile_attempts,
+        ):
+            profile = fetch_tefas_profile(
+                code,
+                session=tefas_session,
+                rate_limiter=tefas_api_limiter,
+                raw_path=TEFAS_PROFILE_RAW_DIR / f"{code}_FON_PROFIL_RAW.json",
+            )
+            profile_requests_sent += 1
+
         enriched = apply_tefas_enrichment(
             base,
             profile,
@@ -819,21 +1004,34 @@ def run_batch(args: argparse.Namespace) -> dict[str, Any]:
             tefas_list_error=tefas_error,
         )
         progress[code] = enriched
-        append_attempt_event(enriched, attempts[code])
-        append_pdf_fallback_event(enriched, attempts[code])
-        append_tefas_start_event(enriched, attempts[code])
-        append_tefas_profile_event(enriched, attempts[code])
+
+        if current is not None:
+            append_attempt_event(enriched, attempts[code])
+            append_pdf_fallback_event(enriched, attempts[code])
+            append_tefas_start_event(enriched, attempts[code])
+        if profile is not None:
+            append_tefas_profile_event(enriched, attempts.get(code, previous_attempt_count))
+
         save_progress(progress, attempts, total_funds=len(all_codes))
+
+        kap_log = (
+            f"KAP HTTP {current.http_status or '—'}"
+            if current is not None
+            else "KAP yeniden tarama YOK"
+        )
+        profile_log = format_profile_log(profile, enriched)
         print(
             f"[{index:>3}/{len(selected_codes)}] {code:<6} | "
-            f"KAP HTTP {current.http_status or '—'} | Profil {profile.status}/"
-            f"{profile.http_status or '—'} | Başlangıç {enriched.start_year} | "
+            f"{kap_log} | {profile_log} | Başlangıç {enriched.start_year} | "
             f"Risk {enriched.risk_level} ({enriched.risk_source}) | "
             f"İşlem {enriched.transaction_status} | "
             f"KAP↔TEFAS {enriched.kap_tefas_status_comparison} | "
-            f"Kategori {failure_category(enriched)}",
+            f"Kayıt Durumu {failure_category(enriched)}",
             flush=True,
         )
+
+    # Seçili batch olmasa bile toplu hızlı geçişin değişiklikleri checkpoint'e yazılır.
+    save_progress(progress, attempts, total_funds=len(all_codes))
 
     failure_rows, failure_counts, retryable_codes = diagnostics(
         funds_by_code,
@@ -887,21 +1085,28 @@ def run_batch(args: argparse.Namespace) -> dict[str, Any]:
         "batch_size": args.batch_size,
         "saved_result_count": len(progress),
         "total_kap_yf_count": len(all_codes),
-        "tefas_bulk_status": bulk_snapshot.status if bulk_snapshot else "NOT_NEEDED",
-        "tefas_bulk_row_count": bulk_snapshot.row_count if bulk_snapshot else 0,
+        "checkpoint_only_count": len(inactive_checkpoint_codes),
+        "checkpoint_only_codes": inactive_checkpoint_codes,
+        "new_kap_code_count": len(new_kap_codes),
+        "new_kap_codes": new_kap_codes,
+        "bulk_fast_pass_updated_count": bulk_updated,
+        "kap_detail_scan_count": kap_detail_scans,
+        "kap_detail_skipped_count": kap_detail_skipped,
+        "tefas_profile_request_count": profile_requests_sent,
+        "tefas_bulk_status": bulk_snapshot.status,
+        "tefas_bulk_row_count": bulk_snapshot.row_count,
         "queue_before": queue_counts_before,
         "queue_after": queue_counts_after,
         "quality_metrics": quality,
         "official_file_updated": published,
         "next_action": (
             "Official JSON published." if published else
-            "Run the workflow again; only pending, failed, incomplete, profile-upgrade or stale records will be selected."
+            "Run the workflow again; only old KAP pending/error/stale records and truly ambiguous TEFAS profiles are selected."
         ),
     }
     atomic_write_json(RUN_STATE_PATH, state)
     print(json.dumps(state, ensure_ascii=False, indent=2))
     return state
-
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()

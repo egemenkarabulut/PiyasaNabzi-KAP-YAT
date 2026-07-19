@@ -671,6 +671,32 @@ def resolve_risk(
     )
 
 
+def bulk_list_trade_decision(
+    *,
+    bulk_status_normalized: str,
+    traded_list_match: str,
+    traded_list_status_raw: Any,
+    traded_list_error: str = "",
+) -> tuple[bool, str, str]:
+    """Toplu ``tefasDurum`` ile canlı işlem listesinin kesin kararını döndürür.
+
+    Dönüş: ``(kesin_mi, durum, açıklama)``.
+    Profil isteği yalnız bu iki toplu kaynak kesin ve uyumlu karar veremediğinde
+    gerekli olur.
+    """
+    bulk = normalize_text(bulk_status_normalized).upper()
+    list_match = normalize_text(traded_list_match).upper()
+    list_status = normalize_tefas_status(traded_list_status_raw)
+
+    if traded_list_error:
+        return False, "KONTROL", "TEFAS işlem listesi alınamadı."
+    if bulk == "AÇIK" and (list_match == "EVET" or list_status == "AÇIK"):
+        return True, "AÇIK", "Toplu tefasDurum=AÇIK ve canlı işlem listesi=EVET."
+    if bulk == "KAPALI" and list_match == "HAYIR":
+        return True, "KAPALI", "Toplu tefasDurum=KAPALI ve canlı işlem listesinde fon yok."
+    return False, "KONTROL", "Toplu tefasDurum ile canlı işlem listesi kesin ve uyumlu karar vermedi."
+
+
 def resolve_trade_status(
     *,
     kap_status: str,
@@ -681,20 +707,49 @@ def resolve_trade_status(
     traded_list_match: str,
     traded_list_status_raw: Any,
     traded_list_error: str = "",
+    bulk_status_raw: Any = "",
+    bulk_status_normalized: str = "KONTROL",
+    profile_api_status: str = "NOT_CHECKED",
 ) -> TradeDecision:
+    """KAP, TEFAS profil, toplu JSON ve canlı listeyi güvenli biçimde birleştirir.
+
+    Öncelik:
+    1. Başarılı tekil profil ``tefasDurum`` + canlı liste,
+    2. Profil gerektirmeyen durumda toplu ``tefasDurum`` + canlı liste,
+    3. Kesin TEFAS kararı yoksa mevcut doğrulanmış KAP değeri.
+
+    Profil isteği hata verdiyse KAP sonucu korunur ve KAP↔TEFAS karşılaştırması
+    ``KONTROL`` olarak bırakılır; sahte ``EŞLEŞİYOR`` üretilmez.
+    """
     kap = normalize_text(kap_status).upper()
     profile = normalize_text(profile_status_normalized).upper()
+    bulk = normalize_text(bulk_status_normalized).upper()
     list_match = normalize_text(traded_list_match).upper()
     list_status = normalize_tefas_status(traded_list_status_raw)
     profile_raw = normalize_text(profile_status_raw)
+    bulk_raw = normalize_text(bulk_status_raw)
+    profile_api = normalize_text(profile_api_status).upper() or "NOT_CHECKED"
 
     final = kap if kap in {"AÇIK", "KAPALI"} else "BİLİNMİYOR"
     source = normalize_text(kap_source) or "KAP_DETAIL_HTML"
     confidence = "YÜKSEK" if final in {"AÇIK", "KAPALI"} else "YOK"
     internal_conflict = "HAYIR"
+    tefas_final_used = False
+    decisive_bulk, bulk_final, bulk_reason = bulk_list_trade_decision(
+        bulk_status_normalized=bulk,
+        traded_list_match=list_match,
+        traded_list_status_raw=traded_list_status_raw,
+        traded_list_error=traded_list_error,
+    )
 
-    if profile in {"AÇIK", "KAPALI"}:
+    profile_usable = bool(
+        profile in {"AÇIK", "KAPALI"}
+        and (profile_api == "API_OK" or (profile_raw and profile_api in {"NOT_CHECKED", "—"}))
+    )
+
+    if profile_usable:
         final = profile
+        tefas_final_used = True
         if profile == "AÇIK" and list_match == "EVET":
             source = "TEFAS_PROFILE:tefasDurum + TEFAS:getFplFonList"
             confidence = "ÇOK YÜKSEK"
@@ -708,28 +763,52 @@ def resolve_trade_status(
                 expected_match = "EVET" if profile == "AÇIK" else "HAYIR"
                 if list_match != expected_match:
                     internal_conflict = "EVET"
-    elif list_match == "EVET" or list_status == "AÇIK":
-        final = "AÇIK"
-        source = "TEFAS:getFplFonList"
-        confidence = "YÜKSEK"
+    elif decisive_bulk:
+        final = bulk_final
+        tefas_final_used = True
+        if bulk_final == "AÇIK":
+            source = "TEFAS_BULK:tefasDurum + TEFAS:getFplFonList"
+        else:
+            source = "TEFAS_BULK:tefasDurum + TEFAS_LIST_ABSENCE"
+        confidence = "ÇOK YÜKSEK"
+    else:
+        # Toplu durum ve liste çelişiyorsa profil gerekir. Profil yok/hatalıysa
+        # doğrulanmış KAP sonucu korunur; tek bir TEFAS işaretinden sonuç türetilmez.
+        if not traded_list_error and bulk in {"AÇIK", "KAPALI"} and list_match in {"EVET", "HAYIR"}:
+            expected_match = "EVET" if bulk == "AÇIK" else "HAYIR"
+            if list_match != expected_match:
+                internal_conflict = "EVET"
+        elif bulk not in {"AÇIK", "KAPALI"} and (list_match == "EVET" or list_status == "AÇIK"):
+            final = "AÇIK"
+            source = "TEFAS:getFplFonList"
+            confidence = "YÜKSEK"
+            tefas_final_used = True
 
     kap_comparison = "KONTROL"
-    if kap in {"AÇIK", "KAPALI"} and final in {"AÇIK", "KAPALI"}:
+    if tefas_final_used and kap in {"AÇIK", "KAPALI"} and final in {"AÇIK", "KAPALI"}:
         kap_comparison = "EŞLEŞİYOR" if kap == final else "ÇATIŞMA"
 
     conflict = internal_conflict == "EVET" or kap_comparison == "ÇATIŞMA"
     evidence = normalize_text(
-        f"TEFAS profil tefasDurum={profile_raw or 'boş'} => {profile or 'KONTROL'}; "
+        f"TEFAS profil API={profile_api}; tefasDurum={profile_raw or 'boş'} => {profile or 'KONTROL'}; "
+        f"TEFAS toplu tefasDurum={bulk_raw or 'boş'} => {bulk or 'KONTROL'}; "
         f"getFplFonList eşleşmesi={list_match or 'HATA'}; "
         f"liste durum={normalize_text(traded_list_status_raw) or 'boş'}; "
         f"KAP sonucu={kap or 'BİLİNMİYOR'}; KAP kanıtı={normalize_text(kap_evidence)}"
     )
-    reason = (
-        "TEFAS profilindeki açık tefasDurum nihai işlem durumu olarak kabul edildi; "
-        "TEFAS işlem listesi doğrulama kaynağıdır."
-        if profile in {"AÇIK", "KAPALI"}
-        else "Profil durumu çözülemedi; mevcut KAP/TEFAS işlem listesi fallback sonucu kullanıldı."
-    )
+
+    if profile_usable:
+        reason = (
+            "TEFAS profilindeki açık tefasDurum nihai işlem durumu olarak kabul edildi; "
+            "TEFAS işlem listesi doğrulama kaynağıdır."
+        )
+    elif decisive_bulk:
+        reason = f"Tekil profil gerektirmeden güvenli toplu doğrulama kullanıldı: {bulk_reason}"
+    elif profile_api in PROFILE_RETRYABLE_STATUSES:
+        reason = f"Profil {profile_api}; kesin TEFAS kararı üretilemedi. Mevcut KAP değeri korundu."
+    else:
+        reason = "Kesin TEFAS kararı üretilemedi; mevcut doğrulanmış KAP değeri korundu."
+
     return TradeDecision(
         final_status=final,
         final_source=source,
@@ -740,3 +819,4 @@ def resolve_trade_status(
         conflict_flag="EVET" if conflict else "HAYIR",
         tefas_internal_conflict=internal_conflict,
     )
+
