@@ -10,7 +10,7 @@ on:
       max_batches:
         description: "Bu çalışmada en fazla kaç batch işlenecek"
         required: false
-        default: "40"
+        default: "15"
       cooldown_seconds:
         description: "Batch'ler arası güvenli bekleme süresi"
         required: false
@@ -20,13 +20,17 @@ on:
         required: false
         default: "1.35"
       tefas_start_delay_min:
-        description: "TEFAS başlangıç JSON istekleri arasındaki minimum süre"
+        description: "TEFAS profil ve başlangıç JSON istekleri arasındaki minimum süre"
         required: false
         default: "15"
       tefas_start_delay_max:
-        description: "TEFAS başlangıç JSON istekleri arasındaki maksimum süre"
+        description: "TEFAS profil ve başlangıç JSON istekleri arasındaki maksimum süre"
         required: false
         default: "20"
+      max_tefas_profile_attempts:
+        description: "TEFAS profil teknik hatalarında en fazla deneme sayısı"
+        required: false
+        default: "3"
   schedule:
     # Türkiye saatiyle her pazar 04:17 (Türkiye UTC+3)
     - cron: "17 1 * * 0"
@@ -60,17 +64,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: v9.5 kural ve publisher testleri
+      - name: v9.6 kural ve publisher testleri
         run: pytest -q
 
       - name: Resumable batch taramasını çalıştır
         env:
           BATCH_SIZE: ${{ github.event.inputs.batch_size || '60' }}
-          MAX_BATCHES: ${{ github.event.inputs.max_batches || '40' }}
+          MAX_BATCHES: ${{ github.event.inputs.max_batches || '15' }}
           COOLDOWN_SECONDS: ${{ github.event.inputs.cooldown_seconds || '180' }}
           DELAY_SECONDS: ${{ github.event.inputs.delay_seconds || '1.35' }}
           TEFAS_START_DELAY_MIN: ${{ github.event.inputs.tefas_start_delay_min || '15' }}
           TEFAS_START_DELAY_MAX: ${{ github.event.inputs.tefas_start_delay_max || '20' }}
+          MAX_TEFAS_PROFILE_ATTEMPTS: ${{ github.event.inputs.max_tefas_profile_attempts || '3' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -90,7 +95,8 @@ jobs:
               --routine-request-limit 65 \
               --routine-cooldown-seconds 180 \
               --tefas-start-delay-min "$TEFAS_START_DELAY_MIN" \
-              --tefas-start-delay-max "$TEFAS_START_DELAY_MAX"
+              --tefas-start-delay-max "$TEFAS_START_DELAY_MAX" \
+              --max-tefas-profile-attempts "$MAX_TEFAS_PROFILE_ATTEMPTS"
 
             git add data/
             if git diff --cached --quiet; then
@@ -148,11 +154,12 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: yat-kap-v95-diagnostics-${{ github.run_number }}
+          name: yat-kap-v96-diagnostics-${{ github.run_number }}
           path: |
             .run_output/KAP_YAT_SOURCE/
             data/diagnostics/pdf_fallback_events.jsonl
             data/diagnostics/tefas_start_year_events.jsonl
+            data/diagnostics/tefas_profile_events.jsonl
             data/diagnostics/request_failures.json
           if-no-files-found: ignore
           retention-days: 14
