@@ -23,6 +23,12 @@ assert publisher_spec and publisher_spec.loader
 sys.modules[publisher_spec.name] = publisher
 publisher_spec.loader.exec_module(publisher)
 
+profile_spec = importlib.util.spec_from_file_location("tefas_profile_source", SCRIPTS / "tefas_profile_source.py")
+profile_source = importlib.util.module_from_spec(profile_spec)
+assert profile_spec and profile_spec.loader
+sys.modules[profile_spec.name] = profile_source
+profile_spec.loader.exec_module(profile_source)
+
 
 def make_result(**overrides):
     values = {}
@@ -44,6 +50,13 @@ def make_result(**overrides):
         "risk_detail": "5",
         "transaction_status": "AÇIK",
         "transaction_decision_reason": "Test",
+        "kap_transaction_status": "AÇIK",
+        "kap_transaction_source": "KAP_DETAIL_HTML:Alım Satım Yerleri",
+        "kap_transaction_evidence": "Test",
+        "kap_transaction_confidence": "YÜKSEK",
+        "tefas_profile_api_status": "API_OK",
+        "tefas_profile_checked_at": "2026-07-19T01:00:00+00:00",
+        "tefas_profile_attempt_count": 1,
         "error": "",
     })
     values.update(overrides)
@@ -572,3 +585,141 @@ def test_merge_allows_kap_start_to_upgrade_previous_tefas_start():
     merged = source.merge_results(previous, current)
     assert merged.start_year == "2020"
     assert merged.start_source.startswith("KAP_YBF_PDF")
+
+
+def test_v96_tefas_status_normalization_handles_turkish_unicode():
+    assert profile_source.normalize_tefas_status("AKTİF") == "AÇIK"
+    assert profile_source.normalize_tefas_status("PASİF") == "KAPALI"
+    assert profile_source.normalize_tefas_status("TEFAS'ta işlem görüyor") == "AÇIK"
+    assert profile_source.normalize_tefas_status("TEFAS'ta İşlem Görmüyor") == "KAPALI"
+
+
+def test_v96_tly_profile_and_bulk_risk_are_confirmed():
+    profile_payload = {
+        "resultList": [{
+            "fonKodu": "TLY",
+            "fonUnvan": "TERA PORTFÖY BİRİNCİ SERBEST FON",
+            "riskDegeri": "7",
+            "tefasDurum": "TEFAS'ta işlem görüyor",
+        }]
+    }
+    bulk_payload = {
+        "resultList": [{
+            "fonKodu": "TLY",
+            "fonUnvan": "TERA PORTFÖY BİRİNCİ SERBEST FON",
+            "riskDegeri": "7",
+            "tefasDurum": True,
+        }]
+    }
+    profile = profile_source.evaluate_profile_payload("TLY", profile_payload)
+    bulk = profile_source.evaluate_bulk_payload(bulk_payload).rows["TLY"]
+    decision = profile_source.resolve_risk(
+        kap_risk="—",
+        kap_source="KAP_DETAIL_HTML:Risk Değeri",
+        kap_evidence="",
+        kap_confidence="YOK",
+        profile_risk_raw=profile.risk_raw,
+        bulk_risk_raw=bulk.risk_raw,
+    )
+    assert profile.risk_value == 7
+    assert bulk.risk_value == 7
+    assert decision.final_value == "7"
+    assert decision.tefas_comparison == "EŞLEŞİYOR"
+    assert decision.conflict_flag == "HAYIR"
+
+
+def test_v96_bck_null_risk_is_not_invented():
+    payload = {
+        "resultList": [{
+            "fonKodu": "BCK",
+            "riskDegeri": None,
+            "tefasDurum": "TEFAS'ta işlem görüyor",
+        }]
+    }
+    profile = profile_source.evaluate_profile_payload("BCK", payload)
+    decision = profile_source.resolve_risk(
+        kap_risk="—",
+        kap_source="KAP_DETAIL_HTML:Risk Değeri",
+        kap_evidence="",
+        kap_confidence="YOK",
+        profile_risk_raw=profile.risk_raw,
+        bulk_risk_raw="",
+    )
+    assert profile.risk_value is None
+    assert decision.final_value == "—"
+    assert decision.tefas_comparison == "BOŞ"
+
+
+def test_v96_bck_tefas_profile_overrides_conflicting_kap_trade_but_preserves_conflict():
+    decision = profile_source.resolve_trade_status(
+        kap_status="KAPALI",
+        kap_source="KAP_DETAIL_HTML:Alım Satım Yerleri",
+        kap_evidence="Sadece kurum kanalı",
+        profile_status_raw="TEFAS'ta işlem görüyor",
+        profile_status_normalized="AÇIK",
+        traded_list_match="EVET",
+        traded_list_status_raw="AKTİF",
+    )
+    assert decision.final_status == "AÇIK"
+    assert decision.final_source == "TEFAS_PROFILE:tefasDurum + TEFAS:getFplFonList"
+    assert decision.kap_comparison == "ÇATIŞMA"
+    assert decision.conflict_flag == "EVET"
+    assert decision.tefas_internal_conflict == "HAYIR"
+
+
+def test_v96_old_checkpoint_row_migrates_without_data_loss():
+    original = make_result(fund_code="OLD", transaction_status="KAPALI")
+    row = source.asdict(original)
+    for name in [
+        "kap_transaction_status",
+        "kap_transaction_source",
+        "kap_transaction_evidence",
+        "kap_transaction_confidence",
+        "tefas_profile_checked_at",
+        "tefas_profile_attempt_count",
+        "tefas_profile_api_status",
+        "tefas_profile_http_status",
+        "tefas_profile_error",
+        "tefas_profile_fund_name",
+        "tefas_profile_isin",
+        "tefas_profile_kap_link",
+        "tefas_status_raw",
+        "tefas_status_normalized",
+        "tefas_bulk_status_raw",
+        "tefas_bulk_status_normalized",
+        "tefas_internal_conflict",
+        "kap_tefas_status_comparison",
+        "tefas_profile_risk_raw",
+        "tefas_profile_risk",
+        "tefas_bulk_risk_raw",
+        "tefas_bulk_risk",
+        "risk_tefas_comparison",
+        "risk_conflict_flag",
+    ]:
+        row.pop(name, None)
+    migrated = source.fund_result_from_dict(row)
+    assert migrated.fund_code == "OLD"
+    assert migrated.transaction_status == "KAPALI"
+    assert migrated.kap_transaction_status == "KAPALI"
+    assert migrated.tefas_profile_api_status == "NOT_CHECKED"
+
+
+def test_v96_old_record_is_queued_once_for_tefas_profile_upgrade():
+    old = make_result(
+        fund_code="OLD",
+        tefas_profile_api_status="NOT_CHECKED",
+        tefas_profile_checked_at="",
+        tefas_profile_attempt_count=0,
+    )
+    selected, counts = publisher.choose_batch(
+        ["OLD"],
+        {"OLD": old},
+        {"OLD": 9},
+        batch_size=60,
+        refresh_days=6,
+        max_field_attempts=3,
+        max_technical_attempts=6,
+        max_tefas_profile_attempts=3,
+    )
+    assert selected == ["OLD"]
+    assert counts["tefas_profile_upgrade"] == 1
