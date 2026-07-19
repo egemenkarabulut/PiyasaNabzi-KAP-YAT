@@ -10,7 +10,7 @@ on:
       max_batches:
         description: "Bu çalışmada en fazla kaç batch işlenecek"
         required: false
-        default: "15"
+        default: "40"
       cooldown_seconds:
         description: "Batch'ler arası güvenli bekleme süresi"
         required: false
@@ -20,11 +20,11 @@ on:
         required: false
         default: "1.35"
       tefas_start_delay_min:
-        description: "TEFAS profil ve başlangıç JSON istekleri arasındaki minimum süre"
+        description: "Yalnız gerekli TEFAS profil ve başlangıç JSON istekleri arasındaki minimum süre"
         required: false
         default: "15"
       tefas_start_delay_max:
-        description: "TEFAS profil ve başlangıç JSON istekleri arasındaki maksimum süre"
+        description: "Yalnız gerekli TEFAS profil ve başlangıç JSON istekleri arasındaki maksimum süre"
         required: false
         default: "20"
       max_tefas_profile_attempts:
@@ -64,13 +64,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: v9.6 kural ve publisher testleri
+      - name: v2.7 optimize publisher ve v9.6 kaynak testleri
         run: pytest -q
 
       - name: Resumable batch taramasını çalıştır
         env:
           BATCH_SIZE: ${{ github.event.inputs.batch_size || '60' }}
-          MAX_BATCHES: ${{ github.event.inputs.max_batches || '15' }}
+          MAX_BATCHES: ${{ github.event.inputs.max_batches || '40' }}
           COOLDOWN_SECONDS: ${{ github.event.inputs.cooldown_seconds || '180' }}
           DELAY_SECONDS: ${{ github.event.inputs.delay_seconds || '1.35' }}
           TEFAS_START_DELAY_MIN: ${{ github.event.inputs.tefas_start_delay_min || '15' }}
@@ -154,7 +154,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: yat-kap-v96-diagnostics-${{ github.run_number }}
+          name: yat-kap-v27-v96-diagnostics-${{ github.run_number }}
           path: |
             .run_output/KAP_YAT_SOURCE/
             data/diagnostics/pdf_fallback_events.jsonl
