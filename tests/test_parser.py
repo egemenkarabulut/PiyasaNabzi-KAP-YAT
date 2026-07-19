@@ -704,7 +704,7 @@ def test_v96_old_checkpoint_row_migrates_without_data_loss():
     assert migrated.tefas_profile_api_status == "NOT_CHECKED"
 
 
-def test_v96_old_record_is_queued_once_for_tefas_profile_upgrade():
+def test_v27_old_complete_record_is_not_queued_only_for_profile_upgrade():
     old = make_result(
         fund_code="OLD",
         tefas_profile_api_status="NOT_CHECKED",
@@ -721,5 +721,103 @@ def test_v96_old_record_is_queued_once_for_tefas_profile_upgrade():
         max_technical_attempts=6,
         max_tefas_profile_attempts=3,
     )
-    assert selected == ["OLD"]
-    assert counts["tefas_profile_upgrade"] == 1
+    assert selected == []
+    assert counts["tefas_profile_upgrade"] == 0
+
+
+def test_v27_bulk_and_live_list_can_confirm_open_without_profile():
+    decision = profile_source.resolve_trade_status(
+        kap_status="KAPALI",
+        kap_source="KAP_DETAIL_HTML:Alım Satım Yerleri",
+        kap_evidence="Sadece kurum kanalı",
+        profile_status_raw="",
+        profile_status_normalized="KONTROL",
+        profile_api_status="NOT_CHECKED",
+        bulk_status_raw=True,
+        bulk_status_normalized="AÇIK",
+        traded_list_match="EVET",
+        traded_list_status_raw="AKTİF",
+    )
+    assert decision.final_status == "AÇIK"
+    assert decision.final_source == "TEFAS_BULK:tefasDurum + TEFAS:getFplFonList"
+    assert decision.kap_comparison == "ÇATIŞMA"
+
+
+def test_v27_profile_request_error_preserves_kap_and_marks_control():
+    decision = profile_source.resolve_trade_status(
+        kap_status="KAPALI",
+        kap_source="KAP_DETAIL_HTML:Alım Satım Yerleri",
+        kap_evidence="Sadece kurum kanalı",
+        profile_status_raw="",
+        profile_status_normalized="KONTROL",
+        profile_api_status="REQUEST_ERROR",
+        bulk_status_raw=True,
+        bulk_status_normalized="AÇIK",
+        traded_list_match="HAYIR",
+        traded_list_status_raw="",
+    )
+    assert decision.final_status == "KAPALI"
+    assert decision.kap_comparison == "KONTROL"
+    assert "Mevcut KAP değeri korundu" in decision.final_reason
+
+
+def test_v27_profile_is_not_requested_when_bulk_and_list_are_decisive():
+    result = make_result(
+        tefas_profile_api_status="NOT_CHECKED",
+        tefas_profile_attempt_count=0,
+        tefas_internal_conflict="HAYIR",
+    )
+    bulk = profile_source.TefasBulkFundRow(
+        fund_code="TST",
+        fund_name="TEST FONU",
+        fund_type="Değişken",
+        risk_raw="5",
+        risk_value=5,
+        status_raw="true",
+        status_normalized="AÇIK",
+    )
+    required = publisher.profile_request_required(
+        result,
+        bulk,
+        tefas_traded_row={"durum": "AKTİF"},
+        tefas_list_error="",
+        max_tefas_profile_attempts=3,
+    )
+    assert required is False
+
+
+def test_v27_profile_request_error_log_is_explicit():
+    profile = profile_source.empty_profile_result(
+        "TST",
+        status="REQUEST_ERROR",
+        error="ConnectionError: test",
+    )
+    result = make_result(tefas_profile_api_status="REQUEST_ERROR")
+    assert publisher.format_profile_log(profile, result) == (
+        "Profil REQUEST_ERROR — Mevcut KAP Değeri Korundu"
+    )
+
+
+def test_v27_complete_not_checked_records_do_not_create_full_queue():
+    progress = {
+        f"F{i:04d}": make_result(
+            fund_code=f"F{i:04d}",
+            tefas_profile_api_status="NOT_CHECKED",
+            tefas_profile_checked_at="",
+            tefas_profile_attempt_count=0,
+        )
+        for i in range(100)
+    }
+    selected, counts = publisher.choose_batch(
+        sorted(progress),
+        progress,
+        {code: 1 for code in progress},
+        batch_size=60,
+        refresh_days=6,
+        max_field_attempts=3,
+        max_technical_attempts=6,
+        max_tefas_profile_attempts=3,
+    )
+    assert selected == []
+    assert counts["tefas_profile_upgrade"] == 0
+    assert counts["pending_total"] == 0
