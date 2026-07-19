@@ -1,0 +1,13 @@
+GITHUB'DA GÜNCELLENECEK DOSYALAR
+================================
+.github/workflows/update-yat-kap-data.yml
+scripts/update_yat_kap_data.py
+scripts/tefas_profile_source.py
+tests/test_parser.py
+README.md
+CHANGES_v2.7_v9.6_OPTIMIZE.md
+VALIDATION_v2.7_v9.6.md
+
+DATA KLASÖRÜNÜ DEĞİŞTİRMEYİN.
+Devam eden eski v2.6 workflow'u iptal edin, dosyaları yükleyip commit edin,
+sonra workflow'u yeniden çalıştırın.
