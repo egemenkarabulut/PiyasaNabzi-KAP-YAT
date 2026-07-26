@@ -1,5 +1,8 @@
 name: YAT KAP Merkezi Veri Güncelleme
 
+# NOT: Otomatik GitHub 'schedule' cron'u kaldırıldı (önceden her pazar çalışıyordu).
+# Artık bu workflow yalnızca ay sonunda, cron-job.org üzerinden harici olarak
+# 'workflow_dispatch' ile tetikleniyor. Bkz: console.cron-job.org/jobs
 on:
   workflow_dispatch:
     inputs:
@@ -31,9 +34,6 @@ on:
         description: "TEFAS profil teknik hatalarında en fazla deneme sayısı"
         required: false
         default: "3"
-  schedule:
-    # Türkiye saatiyle her pazar 04:17 (Türkiye UTC+3)
-    - cron: "17 1 * * 0"
 
 permissions:
   contents: write
@@ -163,4 +163,3 @@ jobs:
             data/diagnostics/request_failures.json
           if-no-files-found: ignore
           retention-days: 14
-
