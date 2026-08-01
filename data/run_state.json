@@ -2,7 +2,7 @@
   "schema_version": 3,
   "publisher_version": "github-resumable-v2.7-v9.6-optimized",
   "source_engine_version": "v9.6-tefas-profile-risk-trade-1",
-  "updated_at": "2026-08-01T16:22:19+00:00",
+  "updated_at": "2026-08-01T16:26:19+00:00",
   "status": "IN_PROGRESS",
   "batch_processed": 60,
   "batch_size": 60,
@@ -28,19 +28,19 @@
   "bulk_fast_pass_updated_count": 1590,
   "kap_detail_scan_count": 5,
   "kap_detail_skipped_count": 55,
-  "tefas_profile_request_count": 5,
+  "tefas_profile_request_count": 0,
   "tefas_bulk_status": "API_OK",
   "tefas_bulk_row_count": 2136,
   "queue_before": {
     "unattempted": 0,
     "technical_retryable": 0,
-    "tefas_profile_retryable": 90,
+    "tefas_profile_retryable": 89,
     "tefas_profile_upgrade": 0,
     "tefas_start_retryable": 0,
-    "field_retryable": 4,
+    "field_retryable": 0,
     "parser_upgrade_retryable": 0,
     "stale": 2035,
-    "pending_total": 2129
+    "pending_total": 2124
   },
   "queue_after": {
     "unattempted": 0,
