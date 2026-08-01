@@ -38,7 +38,7 @@ def make_result(**overrides):
         else:
             values[field.name] = "—"
     values.update({
-        "test_time": "2026-07-17T01:00:00+00:00",
+        "test_time": publisher.utc_now_iso(),  # her testte "az önce kontrol edildi" - refresh_days=6 sınırına asla girmez
         "fund_code": "TST",
         "fund_name": "TEST FONU",
         "detail_url": "https://example.test/tst",
