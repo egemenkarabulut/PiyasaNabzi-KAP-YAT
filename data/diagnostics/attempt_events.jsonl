@@ -3151,3 +3151,4 @@
 {"time": "2026-08-01T16:26:01+00:00", "fund_code": "NFF", "attempt_count": 2, "category": "OK", "http_status": 200, "page_code_verified": "EVET", "start_year": "2025", "risk_level": "5", "trade_status": "AÇIK", "error": ""}
 {"time": "2026-08-01T16:26:16+00:00", "fund_code": "NFS", "attempt_count": 6, "category": "MISSING_RISK", "http_status": 200, "page_code_verified": "EVET", "start_year": "2025", "risk_level": "—", "trade_status": "KAPALI", "error": ""}
 {"time": "2026-08-01T16:26:19+00:00", "fund_code": "NKS", "attempt_count": 6, "category": "MISSING_RISK", "http_status": 200, "page_code_verified": "EVET", "start_year": "2023", "risk_level": "—", "trade_status": "KAPALI", "error": ""}
+{"time": "2026-08-01T16:33:45+00:00", "fund_code": "NMP", "attempt_count": 6, "category": "MISSING_RISK", "http_status": 200, "page_code_verified": "EVET", "start_year": "2026", "risk_level": "—", "trade_status": "KAPALI", "error": ""}
