@@ -2,7 +2,7 @@
   "schema_version": 3,
   "publisher_version": "github-resumable-v2.7-v9.6-optimized",
   "source_engine_version": "v9.6-tefas-profile-risk-trade-1",
-  "updated_at": "2026-08-31T21:32:46+00:00",
+  "updated_at": "2026-08-31T21:36:13+00:00",
   "status": "IN_PROGRESS",
   "batch_processed": 60,
   "batch_size": 60,
@@ -36,9 +36,9 @@
   "new_kap_code_count": 0,
   "new_kap_codes": [],
   "bulk_fast_pass_updated_count": 1606,
-  "kap_detail_scan_count": 6,
-  "kap_detail_skipped_count": 54,
-  "tefas_profile_request_count": 0,
+  "kap_detail_scan_count": 0,
+  "kap_detail_skipped_count": 60,
+  "tefas_profile_request_count": 1,
   "tefas_bulk_status": "API_OK",
   "tefas_bulk_row_count": 2137,
   "queue_before": {
@@ -55,13 +55,13 @@
   "queue_after": {
     "unattempted": 0,
     "technical_retryable": 0,
-    "tefas_profile_retryable": 85,
+    "tefas_profile_retryable": 84,
     "tefas_profile_upgrade": 0,
     "tefas_start_retryable": 0,
     "field_retryable": 0,
     "parser_upgrade_retryable": 0,
     "stale": 2045,
-    "pending_total": 2130
+    "pending_total": 2129
   },
   "quality_metrics": {
     "total_kap_yf_count": 2143,
@@ -71,12 +71,12 @@
     "valid_page_ratio": 1.0,
     "known_trade_count": 2143,
     "known_trade_ratio": 1.0,
-    "tefas_profile_checked_count": 18,
-    "tefas_profile_checked_ratio": 0.008399,
+    "tefas_profile_checked_count": 19,
+    "tefas_profile_checked_ratio": 0.008866,
     "tefas_confirmed_trade_count": 2119,
     "tefas_confirmed_trade_ratio": 0.988801,
     "tefas_traded_count": 1052,
-    "pending_total": 2130
+    "pending_total": 2129
   },
   "official_file_updated": false,
   "next_action": "Run the workflow again; only old KAP pending/error/stale records and truly ambiguous TEFAS profiles are selected."
