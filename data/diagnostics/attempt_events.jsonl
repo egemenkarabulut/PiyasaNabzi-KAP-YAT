@@ -3248,3 +3248,4 @@
 {"time": "2026-08-31T21:32:29+00:00", "fund_code": "NP2", "attempt_count": 6, "category": "MISSING_RISK", "http_status": 200, "page_code_verified": "EVET", "start_year": "2025", "risk_level": "—", "trade_status": "KAPALI", "error": ""}
 {"time": "2026-08-31T21:32:45+00:00", "fund_code": "NUV", "attempt_count": 6, "category": "MISSING_RISK", "http_status": 200, "page_code_verified": "EVET", "start_year": "2024", "risk_level": "—", "trade_status": "KAPALI", "error": ""}
 {"time": "2026-08-31T21:32:46+00:00", "fund_code": "NVC", "attempt_count": 2, "category": "OK", "http_status": 200, "page_code_verified": "EVET", "start_year": "2022", "risk_level": "6", "trade_status": "KAPALI", "error": ""}
+{"time": "2026-08-31T21:39:39+00:00", "fund_code": "OMB", "attempt_count": 6, "category": "MISSING_RISK", "http_status": 200, "page_code_verified": "EVET", "start_year": "2022", "risk_level": "—", "trade_status": "KAPALI", "error": ""}
