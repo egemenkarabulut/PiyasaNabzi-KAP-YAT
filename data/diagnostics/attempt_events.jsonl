@@ -3421,3 +3421,6 @@
 {"time": "2026-09-30T22:35:38+00:00", "fund_code": "PKD", "attempt_count": 2, "category": "OK", "http_status": 200, "page_code_verified": "EVET", "start_year": "2025", "risk_level": "6", "trade_status": "AÇIK", "error": ""}
 {"time": "2026-09-30T22:35:39+00:00", "fund_code": "PKM", "attempt_count": 2, "category": "OK", "http_status": 200, "page_code_verified": "EVET", "start_year": "2026", "risk_level": "1", "trade_status": "AÇIK", "error": ""}
 {"time": "2026-09-30T22:35:41+00:00", "fund_code": "PKV", "attempt_count": 2, "category": "OK", "http_status": 200, "page_code_verified": "EVET", "start_year": "2025", "risk_level": "1", "trade_status": "KAPALI", "error": ""}
+{"time": "2026-09-30T22:39:57+00:00", "fund_code": "PMP", "attempt_count": 2, "category": "OK", "http_status": 200, "page_code_verified": "EVET", "start_year": "2025", "risk_level": "7", "trade_status": "KAPALI", "error": ""}
+{"time": "2026-09-30T22:39:58+00:00", "fund_code": "PNU", "attempt_count": 2, "category": "OK", "http_status": 200, "page_code_verified": "EVET", "start_year": "2026", "risk_level": "2", "trade_status": "AÇIK", "error": ""}
+{"time": "2026-09-30T22:39:59+00:00", "fund_code": "PO9", "attempt_count": 2, "category": "OK", "http_status": 200, "page_code_verified": "EVET", "start_year": "2025", "risk_level": "7", "trade_status": "KAPALI", "error": ""}
