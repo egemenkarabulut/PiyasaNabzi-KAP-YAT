@@ -2,7 +2,7 @@
   "schema_version": 3,
   "publisher_version": "github-resumable-v2.7-v9.6-optimized",
   "source_engine_version": "v9.6-tefas-profile-risk-trade-1",
-  "updated_at": "2026-09-30T22:06:45+00:00",
+  "updated_at": "2026-09-30T22:13:43+00:00",
   "status": "IN_PROGRESS",
   "batch_processed": 60,
   "batch_size": 60,
@@ -43,23 +43,12 @@
   "new_kap_code_count": 0,
   "new_kap_codes": [],
   "bulk_fast_pass_updated_count": 1617,
-  "kap_detail_scan_count": 35,
-  "kap_detail_skipped_count": 25,
-  "tefas_profile_request_count": 1,
+  "kap_detail_scan_count": 2,
+  "kap_detail_skipped_count": 58,
+  "tefas_profile_request_count": 8,
   "tefas_bulk_status": "API_OK",
   "tefas_bulk_row_count": 2133,
   "queue_before": {
-    "unattempted": 0,
-    "technical_retryable": 0,
-    "tefas_profile_retryable": 118,
-    "tefas_profile_upgrade": 0,
-    "tefas_start_retryable": 1,
-    "field_retryable": 0,
-    "parser_upgrade_retryable": 0,
-    "stale": 1947,
-    "pending_total": 2066
-  },
-  "queue_after": {
     "unattempted": 0,
     "technical_retryable": 0,
     "tefas_profile_retryable": 117,
@@ -70,6 +59,17 @@
     "stale": 1947,
     "pending_total": 2065
   },
+  "queue_after": {
+    "unattempted": 0,
+    "technical_retryable": 0,
+    "tefas_profile_retryable": 112,
+    "tefas_profile_upgrade": 0,
+    "tefas_start_retryable": 0,
+    "field_retryable": 0,
+    "parser_upgrade_retryable": 0,
+    "stale": 1947,
+    "pending_total": 2059
+  },
   "quality_metrics": {
     "total_kap_yf_count": 2145,
     "saved_result_count": 2145,
@@ -78,12 +78,12 @@
     "valid_page_ratio": 1.0,
     "known_trade_count": 2145,
     "known_trade_ratio": 1.0,
-    "tefas_profile_checked_count": 92,
-    "tefas_profile_checked_ratio": 0.04289,
+    "tefas_profile_checked_count": 98,
+    "tefas_profile_checked_ratio": 0.045688,
     "tefas_confirmed_trade_count": 1996,
     "tefas_confirmed_trade_ratio": 0.930536,
     "tefas_traded_count": 941,
-    "pending_total": 2065
+    "pending_total": 2059
   },
   "official_file_updated": false,
   "next_action": "Run the workflow again; only old KAP pending/error/stale records and truly ambiguous TEFAS profiles are selected."
