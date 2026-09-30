@@ -3434,3 +3434,5 @@
 {"time": "2026-09-30T22:54:10+00:00", "fund_code": "PTO", "attempt_count": 2, "category": "OK", "http_status": 200, "page_code_verified": "EVET", "start_year": "2025", "risk_level": "6", "trade_status": "KAPALI", "error": ""}
 {"time": "2026-09-30T22:54:24+00:00", "fund_code": "PUK", "attempt_count": 5, "category": "OK", "http_status": 200, "page_code_verified": "EVET", "start_year": "2026", "risk_level": "5", "trade_status": "AÇIK", "error": ""}
 {"time": "2026-09-30T22:54:25+00:00", "fund_code": "PYR", "attempt_count": 2, "category": "OK", "http_status": 200, "page_code_verified": "EVET", "start_year": "2025", "risk_level": "7", "trade_status": "KAPALI", "error": ""}
+{"time": "2026-09-30T22:58:40+00:00", "fund_code": "RAN", "attempt_count": 6, "category": "MISSING_RISK", "http_status": 200, "page_code_verified": "EVET", "start_year": "2024", "risk_level": "—", "trade_status": "KAPALI", "error": ""}
+{"time": "2026-09-30T22:58:43+00:00", "fund_code": "RPU", "attempt_count": 6, "category": "MISSING_RISK", "http_status": 200, "page_code_verified": "EVET", "start_year": "2023", "risk_level": "—", "trade_status": "KAPALI", "error": ""}
